@@ -47,6 +47,7 @@ import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
+import org.jetbrains.annotations.NotNull;
 import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -284,12 +285,27 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             return RESOURCE_RESOLVER;
         }
 
+        @Override
+        public @NotNull ValueMap getValueMap() {
+            return adaptTo(ValueMap.class);
+        }
+
         public String getResourceType() {
             return RESOURCE_TYPE;
         }
 
         public String getResourceSuperType() {
             return RESOURCE_SUPER_TYPE;
+        }
+
+        @Override
+        public boolean hasChildren() {
+            try {
+                return node.hasNodes();
+            } catch (RepositoryException e) {
+                // do nothing
+            }
+            return false;
         }
 
         @SuppressWarnings("unchecked")
@@ -409,6 +425,11 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         }
 
         public Iterator<Resource> listChildren() {
+            return getChildren().iterator();
+        }
+
+        @Override
+        public @NotNull Iterable<Resource> getChildren() {
             try
             {
                 List<Resource> childList = new ArrayList<Resource>();
@@ -418,7 +439,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
                     Node nextNode = it.nextNode();
                     childList.add( new TestResource( nextNode ) );
                 }
-                return childList.iterator();
+                return childList;
             } catch ( RepositoryException re )
             {
                 return null;
