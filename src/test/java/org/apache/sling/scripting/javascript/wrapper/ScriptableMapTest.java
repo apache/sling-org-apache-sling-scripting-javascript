@@ -23,15 +23,18 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 
 public class ScriptableMapTest extends RepositoryScriptingTestBase {
 
     private ValueMap valueMap;
     private ScriptEngineHelper.Data data;
 
-    @Before
+    @Override
+    @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
         valueMap = new ValueMapDecorator(new HashMap<String, Object>() {{
@@ -42,13 +45,14 @@ public class ScriptableMapTest extends RepositoryScriptingTestBase {
         data.put("properties", valueMap);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         valueMap.clear();
         data.clear();
         super.tearDown();
     }
 
+    @Test
     public void testPropertyAccess() throws ScriptException {
         assertEquals("a", script.eval("properties['a']", data));
         assertEquals("a", script.eval("properties.a", data));
@@ -57,6 +61,7 @@ public class ScriptableMapTest extends RepositoryScriptingTestBase {
         assertEquals(null, script.eval("properties['c']", data));
     }
 
+    @Test
     public void testJavaMethods() throws ScriptException {
         assertEquals(2, script.eval("properties.size()", data));
     }

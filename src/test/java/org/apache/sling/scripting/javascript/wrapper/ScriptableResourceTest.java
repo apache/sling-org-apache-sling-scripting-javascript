@@ -43,20 +43,29 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
+import org.apache.sling.testing.mock.sling.junit5.SlingContextExtension;
+import org.apache.sling.testing.mock.sling.junit5.SlingContext;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+@ExtendWith(SlingContextExtension.class)
 public class ScriptableResourceTest extends RepositoryScriptingTestBase {
+
+    private static final SlingContext context = new SlingContext(ResourceResolverType.RESOURCERESOLVER_MOCK);
 
     private Node node;
 
-    private static final ResourceResolver RESOURCE_RESOLVER = new MockResourceResolver();
+    private static final ResourceResolver RESOURCE_RESOLVER = context.resourceResolver();
 
     private static final String RESOURCE_TYPE = "testWrappedResourceType";
 
@@ -65,6 +74,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScriptableResourceTest.class);
 
     @Override
+    @BeforeEach
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -79,6 +89,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         }
     }
 
+    @Test
     public void testDefaultValuePath() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
@@ -90,6 +101,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(node.getPath(), script.eval("resource.getPath()", data));
     }
 
+    @Test
     public void testResourceType() throws Exception {
         // set resource and resource super type
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
@@ -108,6 +120,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             data));
     }
 
+    @Test
     public void testChildren() throws Exception {
         node.addNode("first-child");
         node.addNode("second-child");
@@ -119,6 +132,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals("first-child", script.eval("resource.getChildren()[0].name", data));
     }
 
+    @Test
     public void testListChildren() throws Exception {
         Node firstChild = node.addNode("first-child");
         node.addNode("second-child");
@@ -130,6 +144,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(firstChild.getPath(), script.eval("resource.listChildren()[0].path", data));
     }
 
+    @Test
     public void testGetChild() throws Exception {
         Node child = node.addNode("child");
 
@@ -139,6 +154,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(child.getPath(), script.eval("resource.getChild('./child').path", data));
     }
 
+    @Test
     public void testGetParent() throws Exception {
         Node child = node.addNode("child");
         Node grandChild = child.addNode("grandchild");
@@ -149,6 +165,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(child.getPath(), script.eval("resource.getParent().getPath()", data));
     }
 
+    @Test
     public void testParent() throws Exception {
         Node child = node.addNode("child");
         Node grandChild = child.addNode("grandchild");
@@ -159,12 +176,14 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(child.getPath(), script.eval("resource.parent.path", data));
     }
 
+    @Test
     public void testIsResourceType() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
         assertEquals(Boolean.TRUE, script.eval("resource.isResourceType('" + RESOURCE_TYPE + "')", data));
     }
 
+    @Test
     public void testResourceSuperType() throws Exception {
         // set resource and resource super type
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
@@ -183,6 +202,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             "resource.getResourceSuperType()", data));
     }
 
+    @Test
     public void testResourceMetadata() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
@@ -197,6 +217,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertResourceMetaData(script.eval("resource.getMetadata()", data));
     }
 
+    @Test
     public void testResourceResolver() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
@@ -208,6 +229,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             "resource.getResourceResolver()", data));
     }
 
+    @Test
     public void testAdaptToNode() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
@@ -219,6 +241,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             "resource.adaptTo(Packages.javax.jcr.Node)", data));
     }
 
+    @Test
     public void testAdaptToNothing() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
@@ -230,6 +253,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(true, script.eval("resource.adaptTo(Packages.java.util.Date) == undefined", data));
     }
 
+    @Test
     public void testProperties() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         Calendar date = new GregorianCalendar();

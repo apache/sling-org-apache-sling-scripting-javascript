@@ -18,10 +18,12 @@
  */
 package org.apache.sling.scripting.javascript.internal;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+public class TestPathRegexp {
 
-public class TestPathRegexp extends TestCase {
+	@Test
 	public void testParentPath() {
 		String regexp = "([^/]*/)?[^/]*/\\.\\./";
 		assertEquals("math", "/../math".replaceAll(regexp, ""));
@@ -30,6 +32,7 @@ public class TestPathRegexp extends TestCase {
 		assertEquals("foo/math", "foo/bar/increment/../math".replaceAll(regexp, ""));
 	}
 
+	@Test
 	public void testCurrentPath() {
 		String regexp = "[^/]*/\\./";
 		assertEquals("math", "/./math".replaceAll(regexp, ""));

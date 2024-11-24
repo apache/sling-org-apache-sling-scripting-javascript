@@ -24,6 +24,7 @@ import javax.naming.NamingException;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
+import org.junit.jupiter.api.BeforeEach;
 
 
 /** Base class for tests which need a Repository
@@ -33,6 +34,7 @@ public class RepositoryScriptingTestBase extends RepositoryTestBase {
     private int counter;
     
     @Override
+    @BeforeEach
     protected void setUp() throws Exception {
         super.setUp();
         script = new ScriptEngineHelper();
