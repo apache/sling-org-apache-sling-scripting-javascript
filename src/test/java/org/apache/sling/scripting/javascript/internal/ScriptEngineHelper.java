@@ -33,7 +33,10 @@ import javax.script.SimpleScriptContext;
 import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
 import org.apache.sling.scripting.api.ScriptCache;
-import org.mockito.internal.util.reflection.Whitebox;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Wrapper;
@@ -43,20 +46,29 @@ import static org.mockito.Mockito.mock;
 
 /** Helpers to run javascript code fragments in tests */
 public class ScriptEngineHelper {
+
     private static ScriptEngine engine;
-    private static ScriptCache scriptCache = mock(ScriptCache.class);
+
+    @Mock
+    private static ScriptCache scriptCache;
+
+    @Mock
+    private RhinoJavaScriptEngineFactoryConfiguration factoryConfiguration;
+
+    @InjectMocks
+    private RhinoJavaScriptEngineFactory factory;
+
+    public ScriptEngineHelper() {
+        MockitoAnnotations.openMocks(this);
+    }
 
     public static class Data extends HashMap<String, Object> {
     }
 
-    private static ScriptEngine getEngine() {
+    private ScriptEngine getEngine() {
         if (engine == null) {
             synchronized (ScriptEngineHelper.class) {
-                final RhinoMockComponentContext componentContext = new RhinoMockComponentContext();
-                final RhinoJavaScriptEngineFactoryConfiguration configuration = mock(RhinoJavaScriptEngineFactoryConfiguration.class);
-                RhinoJavaScriptEngineFactory factory = new RhinoJavaScriptEngineFactory();
-                Whitebox.setInternalState(factory, "scriptCache", scriptCache);
-                factory.activate(componentContext, configuration);
+                factory.activate( new RhinoMockComponentContext(), factoryConfiguration);
                 engine = factory.getScriptEngine();
             }
         }

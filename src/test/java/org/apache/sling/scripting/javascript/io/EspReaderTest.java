@@ -21,79 +21,95 @@ package org.apache.sling.scripting.javascript.io;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-
 import javax.script.ScriptException;
-
-import junit.framework.TestCase;
-
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The <code>EspReaderTest</code> contains some simple test cases for the
  * <code>EspReader</code> class which processes ESP (ECMA Server Page) templated
  * JavaScript and produces plain JavaScript.
  */
-public class EspReaderTest extends TestCase {
+public class EspReaderTest {
 
     /** Test read() method */
+    @Test
     public void testReadSingle() throws IOException {
         String src = "<%var%>"; // expect var on reader
 
         Reader reader = new EspReader(new StringReader(src));
-
-        assertTrue("Character 1 must be 'v'", 'v' == reader.read());
-        assertTrue("Character 2 must be 'a'", 'a' == reader.read());
-        assertTrue("Character 3 must be 'r'", 'r' == reader.read());
-        assertTrue("Character 4 must be -1", -1 == reader.read());
+        try {
+            assertTrue('v' == reader.read(), "Character 1 must be 'v'");
+            assertTrue('a' == reader.read(), "Character 2 must be 'a'");
+            assertTrue('r' == reader.read(), "Character 3 must be 'r'");
+            assertTrue(-1 == reader.read(), "Character 4 must be -1");
+        } finally {
+            reader.close();
+        }
     }
 
     /** Test read(char[], int, int) method */
+    @Test
     public void testReadArrayAll() throws IOException {
         String src = "<%var%>"; // expect var on reader
 
         Reader reader = new EspReader(new StringReader(src));
-        char[] buf = new char[3];
-        int rd = reader.read(buf, 0, buf.length);
+        try {
+            char[] buf = new char[3];
+            int rd = reader.read(buf, 0, buf.length);
 
-        assertEquals(3, rd);
-        assertEquals("var", new String(buf, 0, rd));
+            assertEquals(3, rd);
+            assertEquals("var", new String(buf, 0, rd));
 
-        // nothing more to read, expect EOF
-        rd = reader.read(buf, 0, buf.length);
-        assertEquals(-1, rd);
+            // nothing more to read, expect EOF
+            rd = reader.read(buf, 0, buf.length);
+            assertEquals(-1, rd);
+        } finally {
+            reader.close();
+        }
     }
 
     /** Test read(char[], int, int) method */
+    @Test
     public void testReadArrayOffset() throws IOException {
         String jsSrc = "var x = 0;";
         String src = "<%" + jsSrc + "%>";
 
         Reader reader = new EspReader(new StringReader(src));
-        char[] buf = new char[10];
-        int off = 2;
-        int len = 3;
-        int rd = reader.read(buf, off, len);
-        assertEquals(len, rd);
-        assertEquals("var", new String(buf, off, rd));
+        try {
+            char[] buf = new char[10];
+            int off = 2;
+            int len = 3;
+            int rd = reader.read(buf, off, len);
+            assertEquals(len, rd);
+            assertEquals("var", new String(buf, off, rd));
 
-        off = 2;
-        len = 7;
-        rd = reader.read(buf, off, len);
-        assertEquals(len, rd);
-        assertEquals(" x = 0;", new String(buf, off, rd));
+            off = 2;
+            len = 7;
+            rd = reader.read(buf, off, len);
+            assertEquals(len, rd);
+            assertEquals(" x = 0;", new String(buf, off, rd));
 
-        // nothing more to read, expect EOF
-        rd = reader.read(buf, 0, buf.length);
-        assertEquals(-1, rd);
+            // nothing more to read, expect EOF
+            rd = reader.read(buf, 0, buf.length);
+            assertEquals(-1, rd);
+        } finally {
+            reader.close();
+        }
     }
 
     /** Test standard template text */
+    @Test
     public void testTemplate() throws IOException {
         assertEquals("out=response.writer;out.write(\"test\");", parse("test"));
         assertEquals("out=response.writer;out.write(\"test\\n\");\nout.write(\"test2\");", parse("test\ntest2"));
     }
     
     /** Test with a custom "out" initialization */
+    @Test
     public void testOutInit() throws IOException {
         final String input = "test";
         final String expected = "out=getOut();out.write(\"test\");";
@@ -111,22 +127,26 @@ public class EspReaderTest extends TestCase {
     }
 
     /** Test plain JavaScript code */
+    @Test
     public void testCode() throws IOException {
         assertEquals(" test(); ", parse("<% test(); %>"));
         assertEquals(" \ntest();\ntest2(); ", parse("<% \ntest();\ntest2(); %>"));
     }
 
     /** Test JavaScript expressions */
+    @Test
     public void testExpr() throws IOException {
         assertEquals("out=response.writer;out.write( x + 1 );", parse("<%= x + 1 %>"));
         assertEquals("out=response.writer;out.write(\"<!-- \");out.write( x + 1 );out.write(\" -->\");", parse("<!-- <%= x + 1 %> -->"));
     }
 
     /** Test JavaScript comment */
+    @Test
     public void testComment() throws IOException {
         assertEquals("", parse("<%-- test(); --%>"));
     }
     
+    @Test
     public void testCompactExpressionsDouble() throws IOException {
     	final String input = "<html version=\"${1+1}\">\n";
     	final String expected = "out=response.writer;out.write(\"<html version=\\\"\");out.write(1+1);out.write(\"\\\">\\n\");\n";
@@ -134,6 +154,7 @@ public class EspReaderTest extends TestCase {
         assertEquals(flatten(expected), flatten(actual));
     }
     
+    @Test
     public void testCompactExpressionsDoubleNegative() throws IOException {
     	final String input = "<html version=\"{1+1}\">\n";
     	final String expected = "out=response.writer;out.write(\"<html version=\\\"{1+1}\\\">\\n\");\n";
@@ -141,6 +162,7 @@ public class EspReaderTest extends TestCase {
         assertEquals(flatten(expected), flatten(actual));
     }
     
+    @Test
     public void testCompactExpressionsSingle() throws IOException {
     	final String input = "<html version='${1+1}'>\n";
     	final String expected = "out=response.writer;out.write(\"<html version='\");out.write(1+1);out.write(\"'>\\n\");\n";
@@ -148,6 +170,7 @@ public class EspReaderTest extends TestCase {
         assertEquals(flatten(expected), flatten(actual));
     }
     
+    @Test
     public void testCompactExpressionsSingleNegative() throws IOException {
     	final String input = "<html version='{1+1}'>\n";
     	final String expected = "out=response.writer;out.write(\"<html version='{1+1}'>\\n\");\n";
@@ -156,6 +179,7 @@ public class EspReaderTest extends TestCase {
     }
     
     /** Test a complete template, using all features */
+    @Test
     public void testCompleteTemplate() throws IOException {
         final String input =
             "<html>\n"
@@ -197,6 +221,7 @@ public class EspReaderTest extends TestCase {
     }
 
     /** Test a complete template, using all features */
+    @Test
     public void testNumericExpression() throws IOException {
         String input = "<%= 1 %>";
         String expected = "out=response.writer;out.write( 1 );";
@@ -215,6 +240,7 @@ public class EspReaderTest extends TestCase {
     }
     
     /** Test a complete template, using all features */
+    @Test
     public void testNumericExpressionOutput() throws ScriptException {
         ScriptEngineHelper script = new ScriptEngineHelper();
         
@@ -234,6 +260,7 @@ public class EspReaderTest extends TestCase {
         assertEquals(expected, actual);
     }
     
+    @Test
     public void testColon() throws IOException {
         final String input = "currentNode.text:<%= currentNode.text %>";
         final String expected = 
@@ -245,6 +272,7 @@ public class EspReaderTest extends TestCase {
         assertEquals(expected, actual);
     }
     
+    @Test
     public void testEqualSigns() throws IOException {
         final String input = "currentNode.text=<%= currentNode.text %>";
         final String expected = 
@@ -256,6 +284,7 @@ public class EspReaderTest extends TestCase {
         assertEquals(expected, actual);
     }
     
+    @Test
     public void testSingleQuoted() throws IOException {
         final String input = "currentNode.text='<%= currentNode.text %>'";
         final String expected = 
@@ -268,6 +297,7 @@ public class EspReaderTest extends TestCase {
         assertEquals(expected, actual);
     }
     
+    @Test
     public void testDoubleQuoted() throws IOException {
         final String input = "currentNode.text=\"<%= currentNode.text %>\"";
         final String expected = 
@@ -285,12 +315,16 @@ public class EspReaderTest extends TestCase {
         StringBuffer buf = new StringBuffer();
 
         Reader r = new EspReader(new StringReader(text));
-        int c;
-        while ( (c=r.read()) >= 0) {
-            buf.append( (char) c);
-        }
+        try {
+            int c;
+            while ( (c=r.read()) >= 0) {
+                buf.append( (char) c);
+            }
 
-        return buf.toString();
+            return buf.toString();
+        } finally {
+            r.close();
+        } 
     }
     
     /** Replace \n with . in strings to make it easier to compare visually for testing */
