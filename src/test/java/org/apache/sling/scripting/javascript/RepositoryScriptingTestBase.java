@@ -24,6 +24,7 @@ import javax.naming.NamingException;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 
@@ -39,7 +40,13 @@ public class RepositoryScriptingTestBase extends RepositoryTestBase {
         super.setUp();
         script = new ScriptEngineHelper();
     }
-    
+
+    @Override
+    @AfterEach
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
+
     protected Node getNewNode() throws RepositoryException, NamingException {
         return getTestRootNode().addNode("test-" + (++counter));
     }
