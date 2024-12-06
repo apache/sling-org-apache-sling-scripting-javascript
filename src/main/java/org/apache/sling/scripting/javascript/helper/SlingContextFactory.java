@@ -18,8 +18,6 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
-import java.lang.reflect.Field;
-
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.tools.debugger.ScopeProvider;
@@ -45,47 +43,14 @@ public class SlingContextFactory extends ContextFactory {
 
     private int languageVersion;
 
-    // conditionally setup the global ContextFactory to be ours. If
-    // a global context factory has already been set, we have lost
-    // and cannot set this one.
-    public static void setup(ScopeProvider sp, int languageVersion) {
-        // TODO what do we do in the other case? debugger won't work
-        if (!hasExplicitGlobal()) {
-            initGlobal(new SlingContextFactory(sp,
-                    Context.isValidLanguageVersion(languageVersion) ? languageVersion : Context.VERSION_DEFAULT));
-        }
-    }
-
-    public static void teardown() {
-        ContextFactory factory = getGlobal();
-        if (factory instanceof SlingContextFactory) {
-            ((SlingContextFactory) factory).dispose();
-        }
-    }
-
-    // private as instances of this class are only used by setup()
-    private SlingContextFactory(ScopeProvider sp, int languageVersion) {
+    public SlingContextFactory(ScopeProvider sp, int languageVersion) {
         scopeProvider = sp;
         this.languageVersion = languageVersion;
     }
 
-    private void dispose() {
-        // ensure the debugger is closed
-        exitDebugger();
-        
-        // reset the context factory class for future use
-        ContextFactory newGlobal = new ContextFactory();
-        setField(newGlobal, "hasCustomGlobal", Boolean.FALSE);
-        setField(newGlobal, "global", newGlobal);
-        setField(newGlobal, "sealed", Boolean.FALSE);
-        setField(newGlobal, "listeners", null);
-        setField(newGlobal, "disabledListening", Boolean.FALSE);
-        setField(newGlobal, "applicationClassLoader", null);
-    }
-
     @Override
     protected Context makeContext() {
-        Context context = new SlingContext();
+        Context context = new SlingContext(this);
         context.setLanguageVersion(languageVersion);
         return context;
     }
@@ -142,19 +107,4 @@ public class SlingContextFactory extends ContextFactory {
         return debuggerActive;
     }
 
-    private void setField(Object instance, String fieldName, Object value) {
-        try {
-            Field field = instance.getClass().getDeclaredField(fieldName);
-            if (!field.isAccessible()) {
-                field.setAccessible(true);
-            }
-            field.set(instance, value);
-        } catch (IllegalArgumentException iae) {
-            // don't care, but it is strange anyhow
-        } catch (IllegalAccessException iae) {
-            // don't care, but it is strange anyhow
-        } catch (NoSuchFieldException nsfe) {
-            // don't care, but it is strange anyhow
-        }
-    }
 }
