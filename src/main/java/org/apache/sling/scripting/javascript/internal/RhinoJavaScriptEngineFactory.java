@@ -51,7 +51,6 @@ import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableVersion;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableVersionHistory;
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.NativeJavaClass;
 import org.mozilla.javascript.NativeJavaPackage;
@@ -133,6 +132,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
     private Scriptable rootScope;
 
     private final Set<RhinoHostObjectProvider> hostObjectProvider = new HashSet<RhinoHostObjectProvider>();
+
+    private SlingContextFactory contextFactory;
 
     @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager = null;
@@ -251,10 +252,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
         // ensure the debugger is closed if the root scope will
         // be replaced to ensure no references to the old scope
         // and context remain
-        ContextFactory contextFactory = ContextFactory.getGlobal();
-        if (contextFactory instanceof SlingContextFactory) {
-            ((SlingContextFactory) contextFactory).exitDebugger();
-        }
+        contextFactory.exitDebugger();
 
         // drop the scope
         rootScope = null;
@@ -304,7 +302,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             wrapFactory = new SlingWrapFactory();
 
             // initialize the Rhino Context Factory
-            SlingContextFactory.setup(this, RHINO_LANGUAGE_VERSION);
+            contextFactory = new SlingContextFactory(this, RHINO_LANGUAGE_VERSION);
+            contextFactory.setDebugging(debugging);
 
             setEngineName(getEngineName() + " (Rhino " + (rhinoVersion != null ? rhinoVersion : "unknown") + ")");
 
@@ -312,10 +311,6 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             setMimeTypes(PropertiesUtil.toStringArray(props.get("mimeTypes")));
             setNames(PropertiesUtil.toStringArray(props.get("names")));
 
-            final ContextFactory contextFactory = ContextFactory.getGlobal();
-            if (contextFactory instanceof SlingContextFactory) {
-                ((SlingContextFactory) contextFactory).setDebugging(debugging);
-            }
             // set the dynamic class loader as the application class loader
             final DynamicClassLoaderManager dclm = this.dynamicClassLoaderManager;
             if (dclm != null) {
@@ -337,10 +332,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             // remove the root scope
             dropRootScope();
 
-            // remove our context factory
-            SlingContextFactory.teardown();
-
             // remove references
+            contextFactory = null;
             wrapFactory = null;
             hostObjectProvider.clear();
 
