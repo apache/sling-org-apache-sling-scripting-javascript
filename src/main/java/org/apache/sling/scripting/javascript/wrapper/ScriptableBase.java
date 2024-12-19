@@ -34,7 +34,7 @@ public abstract class ScriptableBase extends ScriptableObject {
 
     public static final String JSFUNC_PREFIX = "jsFunction_";
 
-    protected Object getNative(String name, Scriptable start) {
+    protected synchronized Object getNative(String name, Scriptable start) {
         final Object wrapped = getWrappedObject();
 
         if(wrapped == null) {
@@ -46,11 +46,7 @@ public abstract class ScriptableBase extends ScriptableObject {
         }
 
         if(njo == null) {
-            synchronized (this) {
-                if(njo == null) {
-                    njo = new NativeJavaObject(start, wrapped, getStaticType());
-                }
-            }
+            njo = new NativeJavaObject(start, wrapped, getStaticType());
         }
 
         return njo.get(name, start);
