@@ -18,13 +18,6 @@
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import javax.jcr.Item;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
@@ -34,6 +27,14 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingConstants;
@@ -46,17 +47,16 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
-import org.apache.sling.testing.mock.sling.junit5.SlingContextExtension;
-import org.apache.sling.testing.mock.sling.junit5.SlingContext;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit5.SlingContext;
+import org.apache.sling.testing.mock.sling.junit5.SlingContextExtension;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 @ExtendWith(SlingContextExtension.class)
 class ScriptableResourceTest extends RepositoryScriptingTestBase {
@@ -81,9 +81,10 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         node = getNewNode();
 
         try {
-            node.getSession().getWorkspace().getNamespaceRegistry().registerNamespace(
-                SlingConstants.NAMESPACE_PREFIX,
-                JcrResourceConstants.SLING_NAMESPACE_URI);
+            node.getSession()
+                    .getWorkspace()
+                    .getNamespaceRegistry()
+                    .registerNamespace(SlingConstants.NAMESPACE_PREFIX, JcrResourceConstants.SLING_NAMESPACE_URI);
         } catch (NamespaceException ne) {
             // don't care, might happen if already registered
         }
@@ -95,8 +96,7 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         data.put("resource", new TestResource(node));
 
         // the path of the resource
-        assertEquals(node.getPath(), script.evalToString("out.print(resource)",
-            data));
+        assertEquals(node.getPath(), script.evalToString("out.print(resource)", data));
         assertEquals(node.getPath(), script.eval("resource.path", data));
         assertEquals(node.getPath(), script.eval("resource.getPath()", data));
     }
@@ -104,11 +104,8 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
     @Test
     void testResourceType() throws Exception {
         // set resource and resource super type
-        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
-            RESOURCE_TYPE);
-        node.setProperty(
-            JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY,
-            RESOURCE_SUPER_TYPE);
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, RESOURCE_TYPE);
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, RESOURCE_SUPER_TYPE);
 
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
@@ -116,8 +113,7 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         // the resourceType of the resource
         assertEquals(RESOURCE_TYPE, script.eval("resource.type", data));
         assertEquals(RESOURCE_TYPE, script.eval("resource.resourceType", data));
-        assertEquals(RESOURCE_TYPE, script.eval("resource.getResourceType()",
-            data));
+        assertEquals(RESOURCE_TYPE, script.eval("resource.getResourceType()", data));
     }
 
     @Test
@@ -186,20 +182,15 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
     @Test
     void testResourceSuperType() throws Exception {
         // set resource and resource super type
-        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
-            RESOURCE_TYPE);
-        node.setProperty(
-            JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY,
-            RESOURCE_SUPER_TYPE);
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, RESOURCE_TYPE);
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, RESOURCE_SUPER_TYPE);
 
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
 
         // the resourceType of the resource
-        assertEquals(RESOURCE_SUPER_TYPE, script.eval(
-            "resource.resourceSuperType", data));
-        assertEquals(RESOURCE_SUPER_TYPE, script.eval(
-            "resource.getResourceSuperType()", data));
+        assertEquals(RESOURCE_SUPER_TYPE, script.eval("resource.resourceSuperType", data));
+        assertEquals(RESOURCE_SUPER_TYPE, script.eval("resource.getResourceSuperType()", data));
     }
 
     @Test
@@ -209,8 +200,7 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
 
         // official API
         assertResourceMetaData(script.eval("resource.resourceMetadata", data));
-        assertResourceMetaData(script.eval("resource.getResourceMetadata()",
-            data));
+        assertResourceMetaData(script.eval("resource.getResourceMetadata()", data));
 
         // deprecated mappings
         assertResourceMetaData(script.eval("resource.meta", data));
@@ -223,10 +213,8 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         data.put("resource", new TestResource(node));
 
         // official API
-        assertEquals(RESOURCE_RESOLVER, script.eval(
-            "resource.resourceResolver", data));
-        assertEquals(RESOURCE_RESOLVER, script.eval(
-            "resource.getResourceResolver()", data));
+        assertEquals(RESOURCE_RESOLVER, script.eval("resource.resourceResolver", data));
+        assertEquals(RESOURCE_RESOLVER, script.eval("resource.getResourceResolver()", data));
     }
 
     @Test
@@ -235,10 +223,8 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         data.put("resource", new TestResource(node));
 
         // the node to which the resource adapts
-        assertEquals(node, script.eval("resource.adaptTo('javax.jcr.Node')",
-            data));
-        assertEquals(node, script.eval(
-            "resource.adaptTo(Packages.javax.jcr.Node)", data));
+        assertEquals(node, script.eval("resource.adaptTo('javax.jcr.Node')", data));
+        assertEquals(node, script.eval("resource.adaptTo(Packages.javax.jcr.Node)", data));
     }
 
     @Test
@@ -261,7 +247,9 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         node.setProperty("test", "testProperties");
         node.getSession().save();
         data.put("resource", new TestResource(node));
-        assertEquals(date.getTimeInMillis(), script.eval("(resource.properties['jcr:lastModified']).getTimeInMillis()", data));
+        assertEquals(
+                date.getTimeInMillis(),
+                script.eval("(resource.properties['jcr:lastModified']).getTimeInMillis()", data));
         assertEquals("testProperties", script.eval("resource.properties.test", data));
     }
 
@@ -415,37 +403,33 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         }
 
         public Resource getChild(String relPath) {
-            try
-            {
-                Node childNode = node.getNode( relPath );
-                if ( childNode !=  null ) {
-                    return new TestResource( childNode );
+            try {
+                Node childNode = node.getNode(relPath);
+                if (childNode != null) {
+                    return new TestResource(childNode);
                 } else {
                     return null;
                 }
-            } catch ( RepositoryException re )
-            {
+            } catch (RepositoryException re) {
                 return null;
             }
         }
 
         public Resource getParent() {
-            try
-            {
+            try {
                 Node parentNode = node.getParent();
-                if ( parentNode !=  null ) {
-                    return new TestResource( parentNode );
+                if (parentNode != null) {
+                    return new TestResource(parentNode);
                 } else {
                     return null;
                 }
-            } catch ( RepositoryException re )
-            {
+            } catch (RepositoryException re) {
                 return null;
             }
         }
 
         public boolean isResourceType(String resourceType) {
-            return getResourceType().equals( resourceType );
+            return getResourceType().equals(resourceType);
         }
 
         public Iterator<Resource> listChildren() {
@@ -454,23 +438,17 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
 
         @Override
         public @NotNull Iterable<Resource> getChildren() {
-            try
-            {
+            try {
                 List<Resource> childList = new ArrayList<Resource>();
                 NodeIterator it = node.getNodes();
-                while ( it.hasNext() )
-                {
+                while (it.hasNext()) {
                     Node nextNode = it.nextNode();
-                    childList.add( new TestResource( nextNode ) );
+                    childList.add(new TestResource(nextNode));
                 }
                 return childList;
-            } catch ( RepositoryException re )
-            {
+            } catch (RepositoryException re) {
                 return null;
             }
         }
-
-
     }
-
 }

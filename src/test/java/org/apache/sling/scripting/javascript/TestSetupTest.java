@@ -21,27 +21,26 @@ package org.apache.sling.scripting.javascript;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.junit.jupiter.api.Test;
 
-
 /** Verify that our test environment works */
 class TestSetupTest extends RepositoryScriptingTestBase {
-    
+
     /** Test our test repository setup */
     @Test
     void testRootNode() throws Exception {
         assertNotNull(getTestRootNode());
     }
-    
+
     /** Test our script engine setup */
     @Test
     void testScripting() throws Exception {
-        assertEquals("something",script.evalToString("out.print('something')"));
+        assertEquals("something", script.evalToString("out.print('something')"));
     }
-    
+
     @Test
     void testScriptingWithData() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("a", "A");
         data.put("b", "B");
-        assertEquals("A1",script.evalToString("out.print(a + b.length)", data));
+        assertEquals("A1", script.evalToString("out.print(a + b.length)", data));
     }
 }

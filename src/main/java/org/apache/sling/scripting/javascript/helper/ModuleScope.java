@@ -27,33 +27,33 @@ public class ModuleScope extends ImporterTopLevel {
     private static final long serialVersionUID = -6063613037620927512L;
 
     private ExportsObject exports;
-	private Scriptable module;
-	private String name;
+    private Scriptable module;
+    private String name;
 
-	public ModuleScope(Scriptable prototype, String moduleName) {
-		this.setParentScope(null);
-		this.setPrototype(prototype);
-		this.activatePrototypeMap(3);
+    public ModuleScope(Scriptable prototype, String moduleName) {
+        this.setParentScope(null);
+        this.setPrototype(prototype);
+        this.activatePrototypeMap(3);
 
-		this.name = moduleName;
+        this.name = moduleName;
 
-		this.reset();
-	}
+        this.reset();
+    }
 
-	public Scriptable getExports() {
-		return this.exports = (ExportsObject) get("exports", this);
-	}
+    public Scriptable getExports() {
+        return this.exports = (ExportsObject) get("exports", this);
+    }
 
-	public void reset() {
-		this.module = new ModuleObject(this);
-		int attr = READONLY | PERMANENT;
+    public void reset() {
+        this.module = new ModuleObject(this);
+        int attr = READONLY | PERMANENT;
         ScriptableObject.defineProperty(this.module, "id", this.getModuleName(), attr);
 
-		this.exports = new ExportsObject(this);
-		this.defineProperty("exports", this.exports, DONTENUM);
-	}
+        this.exports = new ExportsObject(this);
+        this.defineProperty("exports", this.exports, DONTENUM);
+    }
 
-	public String getModuleName() {
-		return this.name;
-	}
+    public String getModuleName() {
+        return this.name;
+    }
 }

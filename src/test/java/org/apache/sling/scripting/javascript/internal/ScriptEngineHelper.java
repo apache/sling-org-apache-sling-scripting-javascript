@@ -18,17 +18,18 @@
  */
 package org.apache.sling.scripting.javascript.internal;
 
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
+
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
@@ -61,13 +62,12 @@ public class ScriptEngineHelper {
         MockitoAnnotations.openMocks(this);
     }
 
-    public static class Data extends HashMap<String, Object> {
-    }
+    public static class Data extends HashMap<String, Object> {}
 
     private ScriptEngine getEngine() {
         if (engine == null) {
             synchronized (ScriptEngineHelper.class) {
-                factory.activate( new RhinoMockComponentContext(), factoryConfiguration);
+                factory.activate(new RhinoMockComponentContext(), factoryConfiguration);
                 engine = factory.getScriptEngine();
             }
         }
@@ -78,20 +78,17 @@ public class ScriptEngineHelper {
         return evalToString(javascriptCode, null);
     }
 
-    public Object eval(String javascriptCode, Map<String, Object> data)
-            throws ScriptException {
+    public Object eval(String javascriptCode, Map<String, Object> data) throws ScriptException {
         return eval(javascriptCode, data, new StringWriter());
     }
 
-    public String evalToString(String javascriptCode, Map<String, Object> data)
-            throws ScriptException {
+    public String evalToString(String javascriptCode, Map<String, Object> data) throws ScriptException {
         final StringWriter sw = new StringWriter();
         eval(javascriptCode, data, sw);
         return sw.toString();
     }
 
-    public Object eval(String javascriptCode, Map<String, Object> data,
-            final StringWriter sw) throws ScriptException {
+    public Object eval(String javascriptCode, Map<String, Object> data, final StringWriter sw) throws ScriptException {
         final PrintWriter pw = new PrintWriter(sw, true);
         ScriptContext ctx = new SimpleScriptContext();
 

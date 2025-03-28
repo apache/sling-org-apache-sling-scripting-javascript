@@ -29,12 +29,11 @@ public interface SlingWrapper extends Wrapper {
      * @return the class name
      */
     String getClassName();
-    
+
     /**
      * The list of Java classes wrapped by this wrapper.
      *
      * @return the wrapped classes
      */
-    Class<?> [] getWrappedClasses();
-    
+    Class<?>[] getWrappedClasses();
 }

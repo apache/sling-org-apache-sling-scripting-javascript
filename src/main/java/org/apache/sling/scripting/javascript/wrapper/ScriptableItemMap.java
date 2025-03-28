@@ -18,12 +18,12 @@
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
+import javax.jcr.Item;
+import javax.jcr.RepositoryException;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.jcr.Item;
-import javax.jcr.RepositoryException;
 
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
@@ -49,8 +49,7 @@ public class ScriptableItemMap extends ScriptableObject {
                 try {
                     items.put(item.getName(), item);
                 } catch (RepositoryException re) {
-                    log.error("ScriptableItemMap<init>: Cannot get name of item "
-                        + item, re);
+                    log.error("ScriptableItemMap<init>: Cannot get name of item " + item, re);
                 }
             }
         }
@@ -85,7 +84,7 @@ public class ScriptableItemMap extends ScriptableObject {
     public Object get(String name, Scriptable start) {
         // special provision for the "length" property to simulate an array
         if ("length".equals(name)) {
-            return ScriptRuntime.toNumber(this.items.keySet().size()+"");
+            return ScriptRuntime.toNumber(this.items.keySet().size() + "");
         }
 
         Item item = items.get(name);

@@ -1,28 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.scripting.javascript.wrapper;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -33,6 +27,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeType;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.Context;
@@ -51,7 +53,7 @@ import org.slf4j.LoggerFactory;
 public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
     public static final String CLASSNAME = "Node";
-    private static final Class<?> [] WRAPPED_CLASSES = { Node.class };
+    private static final Class<?>[] WRAPPED_CLASSES = {Node.class};
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -73,7 +75,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     }
 
     @Override
-    public Class<?> [] getWrappedClasses() {
+    public Class<?>[] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
 
@@ -89,7 +91,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
     public Object jsFunction_addNode(String path, String primaryType) throws RepositoryException {
         Node n = null;
-        if(primaryType == null || "undefined".equals(primaryType)) {
+        if (primaryType == null || "undefined".equals(primaryType)) {
             n = node.addNode(path);
         } else {
             n = node.addNode(path, primaryType);
@@ -115,7 +117,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     public Object jsFunction_getNodes(String namePattern) {
         try {
             NodeIterator iter = null;
-            if(namePattern == null || "undefined".equals(namePattern)) {
+            if (namePattern == null || "undefined".equals(namePattern)) {
                 iter = node.getNodes();
             } else {
                 iter = node.getNodes(namePattern);
@@ -145,9 +147,8 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     }
 
     public Object jsFunction_getProperty(String name) throws RepositoryException {
-        Object[] args = { node.getProperty(name) };
-        return ScriptRuntime.newObject(Context.getCurrentContext(), this,
-            ScriptableProperty.CLASSNAME, args);
+        Object[] args = {node.getProperty(name)};
+        return ScriptRuntime.newObject(Context.getCurrentContext(), this, ScriptableProperty.CLASSNAME, args);
     }
 
     public String jsFunction_getUUID() {
@@ -304,11 +305,11 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
         // builtin javascript properties (jsFunction_ etc.) have priority
         final Object fromSuperclass = super.get(name, start);
-        if(fromSuperclass != Scriptable.NOT_FOUND) {
+        if (fromSuperclass != Scriptable.NOT_FOUND) {
             return fromSuperclass;
         }
 
-        if(node == null) {
+        if (node == null) {
             return Undefined.instance;
         }
 
@@ -321,7 +322,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
                 items.add(ScriptRuntime.toObject(this, it.nextNode()));
             }
         } catch (RepositoryException e) {
-            log.debug("RepositoryException while collecting Node children",e);
+            log.debug("RepositoryException while collecting Node children", e);
         }
 
         // Add all matching properties to result
@@ -344,10 +345,10 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
             log.debug("RepositoryException while collecting Node properties", e);
         }
 
-        if (items.size()==0) {
+        if (items.size() == 0) {
             return getNative(name, start);
 
-        } else if (items.size()==1 && !isMulti) {
+        } else if (items.size() == 1 && !isMulti) {
             return items.iterator().next();
 
         } else {
@@ -358,8 +359,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     }
 
     /** Wrap JCR Values in a simple way */
-    private Scriptable wrap(Value value) throws ValueFormatException,
-            IllegalStateException, RepositoryException {
+    private Scriptable wrap(Value value) throws ValueFormatException, IllegalStateException, RepositoryException {
 
         Object javaObject;
         if (value.getType() == PropertyType.REFERENCE) {
@@ -407,14 +407,14 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     @Override
     public Object[] getIds() {
         Collection<String> ids = new ArrayList<String>();
-        if(node != null) {
+        if (node != null) {
             try {
                 PropertyIterator pit = node.getProperties();
                 while (pit.hasNext()) {
                     ids.add(pit.nextProperty().getName());
                 }
             } catch (RepositoryException e) {
-                //do nothing, just do not list properties
+                // do nothing, just do not list properties
             }
             try {
                 NodeIterator nit = node.getNodes();
@@ -422,7 +422,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
                     ids.add(nit.nextNode().getName());
                 }
             } catch (RepositoryException e) {
-                //do nothing, just do not list child nodes
+                // do nothing, just do not list child nodes
             }
         }
         return ids.toArray();
@@ -469,12 +469,11 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
         return node;
     }
 
-    //---------- Helper -------------------------------------------------------
+    // ---------- Helper -------------------------------------------------------
 
     private Object toScriptableItemMap(Iterator<?> iter) {
-        Object[] args = (iter != null) ? new Object[] { iter } : null;
-        return ScriptRuntime.newObject(Context.getCurrentContext(), this,
-            ScriptableItemMap.CLASSNAME, args);
+        Object[] args = (iter != null) ? new Object[] {iter} : null;
+        return ScriptRuntime.newObject(Context.getCurrentContext(), this, ScriptableItemMap.CLASSNAME, args);
     }
 
     /**
@@ -563,6 +562,5 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
             }
             return delegatee;
         }
-
     }
 }

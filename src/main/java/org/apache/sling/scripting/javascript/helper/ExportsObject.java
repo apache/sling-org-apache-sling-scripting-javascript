@@ -26,7 +26,7 @@ public class ExportsObject extends NativeObject {
     private static final long serialVersionUID = 7608182741100799506L;
 
     public ExportsObject(Scriptable parent) {
-		this.setParentScope(parent);
-		this.setPrototype(getObjectPrototype(parent));
-	}
+        this.setParentScope(parent);
+        this.setPrototype(getObjectPrototype(parent));
+    }
 }

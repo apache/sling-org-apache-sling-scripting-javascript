@@ -27,17 +27,17 @@ public class ModuleObject extends NativeObject implements Scriptable {
 
     private final ModuleScope module;
 
-        ModuleObject(ModuleScope parent) {
-            setParentScope(parent);
-            setPrototype(getObjectPrototype(parent));
-            this.module = parent;
-        }
+    ModuleObject(ModuleScope parent) {
+        setParentScope(parent);
+        setPrototype(getObjectPrototype(parent));
+        this.module = parent;
+    }
 
-        @Override
-        protected Object equivalentValues(Object value) {
-            if (value instanceof String) {
-                return this.module.getModuleName().equals(value) ? Boolean.TRUE : Boolean.FALSE;
-            }
-            return NOT_FOUND;
+    @Override
+    protected Object equivalentValues(Object value) {
+        if (value instanceof String) {
+            return this.module.getModuleName().equals(value) ? Boolean.TRUE : Boolean.FALSE;
         }
+        return NOT_FOUND;
+    }
 }

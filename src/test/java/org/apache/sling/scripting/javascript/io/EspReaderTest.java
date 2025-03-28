@@ -18,12 +18,13 @@
  */
 package org.apache.sling.scripting.javascript.io;
 
+import javax.script.ScriptException;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.stream.Stream;
 
-import javax.script.ScriptException;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
@@ -112,20 +113,20 @@ class EspReaderTest {
         assertEquals("out=response.writer;out.write(\"test\");", parse("test"));
         assertEquals("out=response.writer;out.write(\"test\\n\");\nout.write(\"test2\");", parse("test\ntest2"));
     }
-    
+
     /** Test with a custom "out" initialization */
     @Test
     void testOutInit() throws IOException {
         final String input = "test";
         final String expected = "out=getOut();out.write(\"test\");";
-            
+
         StringBuffer buf = new StringBuffer();
 
         EspReader r = new EspReader(new StringReader(input));
         r.setOutInitStatement("out=getOut();");
         int c;
-        while ( (c=r.read()) >= 0) {
-            buf.append( (char) c);
+        while ((c = r.read()) >= 0) {
+            buf.append((char) c);
         }
 
         assertEquals(expected, buf.toString());
@@ -142,7 +143,9 @@ class EspReaderTest {
     @Test
     void testExpr() throws IOException {
         assertEquals("out=response.writer;out.write( x + 1 );", parse("<%= x + 1 %>"));
-        assertEquals("out=response.writer;out.write(\"<!-- \");out.write( x + 1 );out.write(\" -->\");", parse("<!-- <%= x + 1 %> -->"));
+        assertEquals(
+                "out=response.writer;out.write(\"<!-- \");out.write( x + 1 );out.write(\" -->\");",
+                parse("<!-- <%= x + 1 %> -->"));
     }
 
     /** Test JavaScript comment */
@@ -154,77 +157,68 @@ class EspReaderTest {
     @ParameterizedTest
     @MethodSource("CompactExpressionCases")
     void testCompactExpressions(final String input, final String expected) throws IOException {
-    	final String actual = parse(input);
+        final String actual = parse(input);
         assertEquals(flatten(expected), flatten(actual));
     }
 
     static Stream<Arguments> CompactExpressionCases() {
-        return Stream.of( 
-            Arguments.of(
-                // input 
-                Named.of("testCompactExpressionsDouble", "<html version=\"${1+1}\">\n"),
-                // expected
-                "out=response.writer;out.write(\"<html version=\\\"\");out.write(1+1);out.write(\"\\\">\\n\");\n"
-            ),
-            Arguments.of(
-                // input
-                Named.of("testCompactExpressionsDoubleNegative", "<html version=\"{1+1}\">\n"),
-                // expected
-                "out=response.writer;out.write(\"<html version=\\\"{1+1}\\\">\\n\");\n"
-            ),
-            Arguments.of(
-                // input
-                Named.of("testCompactExpressionsSingle", "<html version='${1+1}'>\n"),
-                // expected
-                "out=response.writer;out.write(\"<html version='\");out.write(1+1);out.write(\"'>\\n\");\n"
-            ),
-            Arguments.of(
-                // input
-                Named.of("testCompactExpressionsSingleNegative", "<html version='{1+1}'>\n"),
-                // expected
-                "out=response.writer;out.write(\"<html version='{1+1}'>\\n\");\n"
-            )
-        );
+        return Stream.of(
+                Arguments.of(
+                        // input
+                        Named.of("testCompactExpressionsDouble", "<html version=\"${1+1}\">\n"),
+                        // expected
+                        "out=response.writer;out.write(\"<html version=\\\"\");out.write(1+1);out.write(\"\\\">\\n\");\n"),
+                Arguments.of(
+                        // input
+                        Named.of("testCompactExpressionsDoubleNegative", "<html version=\"{1+1}\">\n"),
+                        // expected
+                        "out=response.writer;out.write(\"<html version=\\\"{1+1}\\\">\\n\");\n"),
+                Arguments.of(
+                        // input
+                        Named.of("testCompactExpressionsSingle", "<html version='${1+1}'>\n"),
+                        // expected
+                        "out=response.writer;out.write(\"<html version='\");out.write(1+1);out.write(\"'>\\n\");\n"),
+                Arguments.of(
+                        // input
+                        Named.of("testCompactExpressionsSingleNegative", "<html version='{1+1}'>\n"),
+                        // expected
+                        "out=response.writer;out.write(\"<html version='{1+1}'>\\n\");\n"));
     }
 
     /** Test a complete template, using all features */
     @Test
     void testCompleteTemplate() throws IOException {
-        final String input =
-            "<html>\n"
-            + "<head><title><%= someExpr %></title></head>\n"
-            + "<!-- some HTML comment -->\n"
-            + "<-- some ESP comment -->\n"
-            + "// some javascript comment\n"
-            + "/* another javascript comment /*\n"
-            + "<%\n"
-            + "expr on\n"
-            + "two lines\n"
-            + "%>\n"
-            + "<verbatim stuff=\"quoted\">xyz</verbatim>\n"
-            + "<moreverbatim stuff=\'single\'>xx</moreverbatim>\n"
-            + "<!-- HTML comment with <% expr.here; %> and EOL\n-->\n"
-            + "</html>"
-        ;
-        
-        final String expected = 
-            "out=response.writer;out.write(\"<html>\\n\");\n"
-            + "out.write(\"<head><title>\");out.write( someExpr );out.write(\"</title></head>\\n\");\n"
-            + "out.write(\"<!-- some HTML comment -->\\n\");\n"
-            + "out.write(\"<-- some ESP comment -->\\n\");\n"
-            + "out.write(\"// some javascript comment\\n\");\n"
-            + "out.write(\"/* another javascript comment /*\\n\");\n"
-            + "\n"
-            + "expr on\n"
-            + "two lines\n"
-            + "out.write(\"\\n\");\n"
-            + "out.write(\"<verbatim stuff=\\\"quoted\\\">xyz</verbatim>\\n\");\n"
-            + "out.write(\"<moreverbatim stuff='single'>xx</moreverbatim>\\n\");\n"
-            + "out.write(\"<!-- HTML comment with \"); expr.here; out.write(\" and EOL\\n\");\n"
-            + "out.write(\"-->\\n\");\n"
-            + "out.write(\"</html>\");"
-        ;
-        
+        final String input = "<html>\n"
+                + "<head><title><%= someExpr %></title></head>\n"
+                + "<!-- some HTML comment -->\n"
+                + "<-- some ESP comment -->\n"
+                + "// some javascript comment\n"
+                + "/* another javascript comment /*\n"
+                + "<%\n"
+                + "expr on\n"
+                + "two lines\n"
+                + "%>\n"
+                + "<verbatim stuff=\"quoted\">xyz</verbatim>\n"
+                + "<moreverbatim stuff=\'single\'>xx</moreverbatim>\n"
+                + "<!-- HTML comment with <% expr.here; %> and EOL\n-->\n"
+                + "</html>";
+
+        final String expected = "out=response.writer;out.write(\"<html>\\n\");\n"
+                + "out.write(\"<head><title>\");out.write( someExpr );out.write(\"</title></head>\\n\");\n"
+                + "out.write(\"<!-- some HTML comment -->\\n\");\n"
+                + "out.write(\"<-- some ESP comment -->\\n\");\n"
+                + "out.write(\"// some javascript comment\\n\");\n"
+                + "out.write(\"/* another javascript comment /*\\n\");\n"
+                + "\n"
+                + "expr on\n"
+                + "two lines\n"
+                + "out.write(\"\\n\");\n"
+                + "out.write(\"<verbatim stuff=\\\"quoted\\\">xyz</verbatim>\\n\");\n"
+                + "out.write(\"<moreverbatim stuff='single'>xx</moreverbatim>\\n\");\n"
+                + "out.write(\"<!-- HTML comment with \"); expr.here; out.write(\" and EOL\\n\");\n"
+                + "out.write(\"-->\\n\");\n"
+                + "out.write(\"</html>\");";
+
         final String actual = parse(input);
         assertEquals(flatten(expected), flatten(actual));
     }
@@ -236,23 +230,23 @@ class EspReaderTest {
         String expected = "out=response.writer;out.write( 1 );";
         String actual = parse(input);
         assertEquals(expected, actual);
-        
+
         input = "<%= \"1\" %>";
         expected = "out=response.writer;out.write( \"1\" );";
         actual = parse(input);
         assertEquals(expected, actual);
-        
+
         input = "<%= '1' %>";
         expected = "out=response.writer;out.write( '1' );";
         actual = parse(input);
         assertEquals(expected, actual);
     }
-    
+
     /** Test a complete template, using all features */
     @Test
     void testNumericExpressionOutput() throws ScriptException {
         ScriptEngineHelper script = new ScriptEngineHelper();
-        
+
         String input = "out.write( 1 );";
         String actual = script.evalToString(input);
         String expected = "1";
@@ -268,57 +262,47 @@ class EspReaderTest {
         expected = "1";
         assertEquals(expected, actual);
     }
-    
+
     @Test
     void testColon() throws IOException {
         final String input = "currentNode.text:<%= currentNode.text %>";
-        final String expected = 
-            "out=response.writer;" 
-            + "out.write(\"currentNode.text:\");"
-            + "out.write( currentNode.text );"
-            ;
+        final String expected =
+                "out=response.writer;" + "out.write(\"currentNode.text:\");" + "out.write( currentNode.text );";
         final String actual = parse(input);
         assertEquals(expected, actual);
     }
-    
+
     @Test
     void testEqualSigns() throws IOException {
         final String input = "currentNode.text=<%= currentNode.text %>";
-        final String expected = 
-            "out=response.writer;" 
-            + "out.write(\"currentNode.text=\");"
-            + "out.write( currentNode.text );"
-            ;
+        final String expected =
+                "out=response.writer;" + "out.write(\"currentNode.text=\");" + "out.write( currentNode.text );";
         final String actual = parse(input);
         assertEquals(expected, actual);
     }
-    
+
     @Test
     void testSingleQuoted() throws IOException {
         final String input = "currentNode.text='<%= currentNode.text %>'";
-        final String expected = 
-            "out=response.writer;" 
-            + "out.write(\"currentNode.text='\");"
-            + "out.write( currentNode.text );"
-            + "out.write(\"'\");"
-            ;
+        final String expected = "out=response.writer;"
+                + "out.write(\"currentNode.text='\");"
+                + "out.write( currentNode.text );"
+                + "out.write(\"'\");";
         final String actual = parse(input);
         assertEquals(expected, actual);
     }
-    
+
     @Test
     void testDoubleQuoted() throws IOException {
         final String input = "currentNode.text=\"<%= currentNode.text %>\"";
-        final String expected = 
-            "out=response.writer;" 
-            + "out.write(\"currentNode.text=\\\"\");"
-            + "out.write( currentNode.text );"
-            + "out.write(\"\\\"\");"
-            ;
+        final String expected = "out=response.writer;"
+                + "out.write(\"currentNode.text=\\\"\");"
+                + "out.write( currentNode.text );"
+                + "out.write(\"\\\"\");";
         final String actual = parse(input);
         assertEquals(expected, actual);
     }
-    
+
     /** Helper to pass an ESP text through the EspReader and return the result */
     private String parse(String text) throws IOException {
         StringBuffer buf = new StringBuffer();
@@ -326,16 +310,16 @@ class EspReaderTest {
         Reader r = new EspReader(new StringReader(text));
         try {
             int c;
-            while ( (c=r.read()) >= 0) {
-                buf.append( (char) c);
+            while ((c = r.read()) >= 0) {
+                buf.append((char) c);
             }
 
             return buf.toString();
         } finally {
             r.close();
-        } 
+        }
     }
-    
+
     /** Replace \n with . in strings to make it easier to compare visually for testing */
     private static String flatten(String str) {
         return str.replace('\n', '.');

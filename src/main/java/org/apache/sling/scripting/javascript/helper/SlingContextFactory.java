@@ -51,8 +51,8 @@ public class SlingContextFactory extends ContextFactory {
     public static void setup(ScopeProvider sp, int languageVersion) {
         // TODO what do we do in the other case? debugger won't work
         if (!hasExplicitGlobal()) {
-            initGlobal(new SlingContextFactory(sp,
-                    Context.isValidLanguageVersion(languageVersion) ? languageVersion : Context.VERSION_DEFAULT));
+            initGlobal(new SlingContextFactory(
+                    sp, Context.isValidLanguageVersion(languageVersion) ? languageVersion : Context.VERSION_DEFAULT));
         }
     }
 
@@ -72,7 +72,7 @@ public class SlingContextFactory extends ContextFactory {
     private void dispose() {
         // ensure the debugger is closed
         exitDebugger();
-        
+
         // reset the context factory class for future use
         ContextFactory newGlobal = new ContextFactory();
         setField(newGlobal, "hasCustomGlobal", Boolean.FALSE);
@@ -109,14 +109,12 @@ public class SlingContextFactory extends ContextFactory {
         if (isDebugging()) {
             try {
                 if (debugger == null) {
-                    debugger = new SlingRhinoDebugger(
-                        getClass().getSimpleName());
+                    debugger = new SlingRhinoDebugger(getClass().getSimpleName());
                     debugger.setScopeProvider(scopeProvider);
                     debugger.attachTo(this);
                 }
             } catch (Exception e) {
-                log.warn("initDebugger: Failed setting up the Rhino debugger",
-                    e);
+                log.warn("initDebugger: Failed setting up the Rhino debugger", e);
             }
         }
     }
@@ -129,7 +127,7 @@ public class SlingContextFactory extends ContextFactory {
             debugger = null;
         }
     }
-    
+
     void debuggerStopped() {
         debugger = null;
     }

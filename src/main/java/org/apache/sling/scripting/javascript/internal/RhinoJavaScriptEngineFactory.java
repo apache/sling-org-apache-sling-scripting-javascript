@@ -18,6 +18,9 @@
  */
 package org.apache.sling.scripting.javascript.internal;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -29,9 +32,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
 
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -72,48 +72,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(
-    service = ScriptEngineFactory.class,
-    property = {
-        Constants.SERVICE_DESCRIPTION + "=Apache Sling Rhino Javascript Engine Factory",
-        Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
-        "extensions=" + RhinoJavaScriptEngineFactory.ECMA_SCRIPT_EXTENSION,
-        "extensions=" + RhinoJavaScriptEngineFactory.ESP_SCRIPT_EXTENSION,
-        "mimeTypes=text/ecmascript",
-        "mimeTypes=text/javascript",
-        "mimeTypes=application/ecmascript",
-        "mimeTypes=application/javascript",
-        "names=rhino",
-        "names=Rhino",
-        "names=javascript",
-        "names=JavaScript",
-        "names=ecmascript",
-        "names=ECMAScript"
-    },
-    reference = @Reference(
-        name = "HostObjectProvider",
-        service = RhinoHostObjectProvider.class,
-        cardinality = ReferenceCardinality.MULTIPLE,
-        policy = ReferencePolicy.DYNAMIC,
-        bind = "addHostObjectProvider",
-        unbind = "removeHostObjectProvider"
-    )
-)
-@Designate(
-    ocd = RhinoJavaScriptEngineFactoryConfiguration.class
-)
+        service = ScriptEngineFactory.class,
+        property = {
+            Constants.SERVICE_DESCRIPTION + "=Apache Sling Rhino Javascript Engine Factory",
+            Constants.SERVICE_VENDOR + "=The Apache Software Foundation",
+            "extensions=" + RhinoJavaScriptEngineFactory.ECMA_SCRIPT_EXTENSION,
+            "extensions=" + RhinoJavaScriptEngineFactory.ESP_SCRIPT_EXTENSION,
+            "mimeTypes=text/ecmascript",
+            "mimeTypes=text/javascript",
+            "mimeTypes=application/ecmascript",
+            "mimeTypes=application/javascript",
+            "names=rhino",
+            "names=Rhino",
+            "names=javascript",
+            "names=JavaScript",
+            "names=ecmascript",
+            "names=ECMAScript"
+        },
+        reference =
+                @Reference(
+                        name = "HostObjectProvider",
+                        service = RhinoHostObjectProvider.class,
+                        cardinality = ReferenceCardinality.MULTIPLE,
+                        policy = ReferencePolicy.DYNAMIC,
+                        bind = "addHostObjectProvider",
+                        unbind = "removeHostObjectProvider"))
+@Designate(ocd = RhinoJavaScriptEngineFactoryConfiguration.class)
 public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory implements ScopeProvider {
 
-    public final static int DEFAULT_OPTIMIZATION_LEVEL = 9;
+    public static final int DEFAULT_OPTIMIZATION_LEVEL = 9;
 
-    public final static String ECMA_SCRIPT_EXTENSION = "ecma";
+    public static final String ECMA_SCRIPT_EXTENSION = "ecma";
 
-    public final static String ESP_SCRIPT_EXTENSION = "esp";
+    public static final String ESP_SCRIPT_EXTENSION = "esp";
 
     private static final Class<?>[] HOSTOBJECT_CLASSES = {
-            ScriptableResource.class, ScriptableNode.class,
-            ScriptableProperty.class, ScriptableItemMap.class,
-            ScriptablePrintWriter.class, ScriptableVersionHistory.class,
-            ScriptableVersion.class, ScriptableCalendar.class, ScriptableMap.class
+        ScriptableResource.class,
+        ScriptableNode.class,
+        ScriptableProperty.class,
+        ScriptableItemMap.class,
+        ScriptablePrintWriter.class,
+        ScriptableVersionHistory.class,
+        ScriptableVersion.class,
+        ScriptableCalendar.class,
+        ScriptableMap.class
     };
 
     /**
@@ -126,7 +128,6 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
     private static final int RHINO_LANGUAGE_VERSION = Context.VERSION_ES6;
     private static final String LANGUAGE_VERSION = "partial ECMAScript 2015 support";
     private static final String LANGUAGE_NAME = "ECMAScript";
-
 
     private SlingWrapFactory wrapFactory;
 
@@ -262,15 +263,18 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
 
     // ---------- SCR integration
     @Activate
-    protected void activate(final ComponentContext context, final RhinoJavaScriptEngineFactoryConfiguration configuration) {
+    protected void activate(
+            final ComponentContext context, final RhinoJavaScriptEngineFactoryConfiguration configuration) {
         Dictionary<?, ?> props = context.getProperties();
-        boolean debugging = getProperty("org.apache.sling.scripting.javascript.debug", props, context.getBundleContext(), false);
+        boolean debugging =
+                getProperty("org.apache.sling.scripting.javascript.debug", props, context.getBundleContext(), false);
 
         // try to get the manifest
         String rhinoVersion = null;
         InputStream ins = null;
         try {
-            Enumeration<URL> resources = RhinoJavaScriptEngineFactory.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
+            Enumeration<URL> resources =
+                    RhinoJavaScriptEngineFactory.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
             while (resources.hasMoreElements()) {
                 try {
                     URL url = resources.nextElement();
@@ -398,8 +402,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
         }
     }
 
-    private void addImportedClasses(Context cx, Scriptable scope,
-                                    Class<?>[] classes) {
+    private void addImportedClasses(Context cx, Scriptable scope, Class<?>[] classes) {
         if (classes != null && classes.length > 0) {
             NativeJavaClass[] np = new NativeJavaClass[classes.length];
             for (int i = 0; i < classes.length; i++) {
@@ -409,8 +412,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
         }
     }
 
-    private void addImportedPackages(Context cx, Scriptable scope,
-                                     String[] packages) {
+    private void addImportedPackages(Context cx, Scriptable scope, String[] packages) {
         if (packages != null && packages.length > 0) {
             NativeJavaPackage[] np = new NativeJavaPackage[packages.length];
             for (int i = 0; i < packages.length; i++) {
@@ -420,16 +422,14 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
         }
     }
 
-    private boolean getProperty(String name, Dictionary<?, ?> props,
-                                BundleContext bundleContext, boolean defaultValue) {
+    private boolean getProperty(
+            String name, Dictionary<?, ?> props, BundleContext bundleContext, boolean defaultValue) {
         Object value = props.get(name);
         if (value == null) {
             value = bundleContext.getProperty(name);
         }
 
-        return (value != null)
-                ? Boolean.parseBoolean(String.valueOf(value))
-                : defaultValue;
+        return (value != null) ? Boolean.parseBoolean(String.valueOf(value)) : defaultValue;
     }
 
     private int readOptimizationLevel(final RhinoJavaScriptEngineFactoryConfiguration configuration) {

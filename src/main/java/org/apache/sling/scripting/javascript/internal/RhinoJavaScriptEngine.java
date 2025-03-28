@@ -1,27 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.scripting.javascript.internal;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -30,6 +25,13 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.scripting.LazyBindings;
@@ -94,7 +96,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
             scriptReader = wrapReaderIfEspScript(scriptReader, scriptName);
             try {
                 final Context rhinoContext = Context.enter();
-                rhinoContext.setLanguageVersion(((RhinoJavaScriptEngineFactory)getFactory()).rhinoLanguageVersion());
+                rhinoContext.setLanguageVersion(((RhinoJavaScriptEngineFactory) getFactory()).rhinoLanguageVersion());
                 rhinoContext.setOptimizationLevel(optimizationLevel());
 
                 if (!ScriptRuntime.hasTopCall(rhinoContext)) {
@@ -126,7 +128,8 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
                 LOGGER.debug("Added {} script to Script Cache.", scriptName);
                 return slingCompiledScript;
             } catch (IOException e) {
-                final ScriptException se = new ScriptException("Failure running script " + scriptName + ": " + e.getMessage());
+                final ScriptException se =
+                        new ScriptException("Failure running script " + scriptName + ": " + e.getMessage());
                 se.initCause(e);
                 throw se;
             } finally {
@@ -140,7 +143,8 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
         Reader reader = wrapReaderIfEspScript(scriptReader, scriptName);
         if (!(scriptReader instanceof ScriptNameAware)) {
             if (NO_SCRIPT_NAME.equals(scriptName)) {
-                String script = (String) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(ScriptEngine.FILENAME);
+                String script = (String)
+                        scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(ScriptEngine.FILENAME);
                 if (script != null) {
                     for (String extension : getFactory().getExtensions()) {
                         if (script.endsWith(extension)) {
@@ -162,8 +166,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
         return scriptReader;
     }
 
-    private Map<String, Object> setBoundProperties(Scriptable scope,
-            Bindings bindings) {
+    private Map<String, Object> setBoundProperties(Scriptable scope, Bindings bindings) {
         Map<String, Object> replacedProperties = new HashMap<String, Object>();
 
         for (Object entryObject : bindings.entrySet()) {
@@ -177,8 +180,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
             if (value != null) {
                 // get the current property value, if set
                 if (ScriptableObject.hasProperty(scope, name)) {
-                    replacedProperties.put(name, ScriptableObject.getProperty(
-                        scope, name));
+                    replacedProperties.put(name, ScriptableObject.getProperty(scope, name));
                 }
 
                 // wrap the new value and set it
@@ -207,18 +209,16 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
         }
     }
 
-    private void resetBoundProperties(Scriptable scope,
-            Map<String, Object> properties) {
+    private void resetBoundProperties(Scriptable scope, Map<String, Object> properties) {
         if (scope != null && properties != null && properties.size() > 0) {
             for (Entry<String, Object> entry : properties.entrySet()) {
-                ScriptableObject.putProperty(scope, entry.getKey(),
-                    entry.getValue());
+                ScriptableObject.putProperty(scope, entry.getKey(), entry.getValue());
             }
         }
     }
 
     private int optimizationLevel() {
-        return ((RhinoJavaScriptEngineFactory)getFactory()).getOptimizationLevel();
+        return ((RhinoJavaScriptEngineFactory) getFactory()).getOptimizationLevel();
     }
 
     private class SlingCompiledScript extends CompiledScript {
@@ -244,7 +244,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
             try {
 
                 final Context rhinoContext = Context.enter();
-                rhinoContext.setLanguageVersion(((RhinoJavaScriptEngineFactory)getFactory()).rhinoLanguageVersion());
+                rhinoContext.setLanguageVersion(((RhinoJavaScriptEngineFactory) getFactory()).rhinoLanguageVersion());
                 rhinoContext.setOptimizationLevel(optimizationLevel());
 
                 if (ScriptRuntime.hasTopCall(rhinoContext)) {
@@ -288,8 +288,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
                 // prevent variables to be pushed back in case of errors
                 isTopLevelCall = false;
 
-                final ScriptException se = new ScriptException(t.details(),
-                        t.sourceName(), t.lineNumber());
+                final ScriptException se = new ScriptException(t.details(), t.sourceName(), t.lineNumber());
 
                 // log the script stack trace
                 ((Logger) bindings.get(SlingBindings.LOG)).error(t.getScriptStackTrace());
@@ -317,7 +316,8 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
                 // prevent variables to be pushed back in case of errors
                 isTopLevelCall = false;
                 String scriptName = getScriptName(scriptContext);
-                final ScriptException se = new ScriptException("Failure running script " + scriptName + ": " + t.getMessage());
+                final ScriptException se =
+                        new ScriptException("Failure running script " + scriptName + ": " + t.getMessage());
                 se.initCause(t);
                 throw se;
 
@@ -342,8 +342,9 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
                         if (scope != null) {
                             ClassCache classCache = ClassCache.get(scope);
                             classCache.clearCaches();
-                            LOGGER.info("Detected dirty class loader on thread {}. Emptying Rhino's class cache.", Thread.currentThread()
-                                    .getName());
+                            LOGGER.info(
+                                    "Detected dirty class loader on thread {}. Emptying Rhino's class cache.",
+                                    Thread.currentThread().getName());
                         }
                     }
                 }
@@ -358,7 +359,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine implements 
     }
 
     private String getScriptName(Reader scriptReader) {
-        if(scriptReader instanceof ScriptNameAware){
+        if (scriptReader instanceof ScriptNameAware) {
             return ((ScriptNameAware) scriptReader).getScriptName();
         }
         return NO_SCRIPT_NAME;

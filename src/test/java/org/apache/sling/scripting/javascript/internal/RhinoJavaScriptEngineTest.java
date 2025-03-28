@@ -26,12 +26,12 @@ import javax.script.SimpleBindings;
 import org.apache.sling.api.scripting.LazyBindings;
 import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.Scriptable;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -105,5 +105,4 @@ class RhinoJavaScriptEngineTest {
             return wrapFactory;
         }
     }
-
 }

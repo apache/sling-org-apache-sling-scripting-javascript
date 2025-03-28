@@ -47,8 +47,7 @@ public class SlingWrapFactory extends WrapFactory {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Scriptable wrapAsJavaObject(Context cx, Scriptable scope,
-            Object javaObject, Class staticType) {
+    public Scriptable wrapAsJavaObject(Context cx, Scriptable scope, Object javaObject, Class staticType) {
 
         Scriptable result = null;
         try {
@@ -59,8 +58,7 @@ public class SlingWrapFactory extends WrapFactory {
             }
 
             if (hostObjectName != null) {
-                result = cx.newObject(scope, hostObjectName,
-                    new Object[] { javaObject });
+                result = cx.newObject(scope, hostObjectName, new Object[] {javaObject});
             }
         } catch (Exception e) {
             log.warn("Cannot Wrap " + javaObject, e);
@@ -74,13 +72,13 @@ public class SlingWrapFactory extends WrapFactory {
     }
 
     private String getHostObjectName(Class<?> javaClass) {
-        if(javaClass==null || isExcluded(javaClass)) {
+        if (javaClass == null || isExcluded(javaClass)) {
             return null;
         }
         String hostObjectName = wrappers.get(javaClass);
         if (hostObjectName == null) {
             // before SLING-383 the superclass was tested first,
-            // but for Version and VersionHistory this would get 
+            // but for Version and VersionHistory this would get
             // a Node wrapper, that's not what we want
             final Class<?>[] javaInterfaces = javaClass.getInterfaces();
             for (int i = 0; i < javaInterfaces.length && hostObjectName == null; i++) {

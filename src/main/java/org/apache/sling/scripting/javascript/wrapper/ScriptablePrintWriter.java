@@ -1,25 +1,27 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
+import javax.servlet.http.HttpServletRequest;
+
 import java.io.PrintWriter;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.javascript.SlingWrapper;
@@ -33,15 +35,14 @@ import org.mozilla.javascript.Wrapper;
 public class ScriptablePrintWriter extends ScriptableObject implements SlingWrapper {
 
     public static final String CLASSNAME = "PrintWriter";
-    private static final Class<?> [] WRAPPED_CLASSES = { PrintWriter.class };
+    private static final Class<?>[] WRAPPED_CLASSES = {PrintWriter.class};
 
     private PrintWriter writer;
 
     // the locale to use for printf
     private Locale locale;
 
-    public ScriptablePrintWriter() {
-    }
+    public ScriptablePrintWriter() {}
 
     public ScriptablePrintWriter(PrintWriter writer) {
         this.writer = writer;
@@ -56,21 +57,19 @@ public class ScriptablePrintWriter extends ScriptableObject implements SlingWrap
         return CLASSNAME;
     }
 
-    public Class<?> [] getWrappedClasses() {
+    public Class<?>[] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
-    
+
     // print args to writer if any
     // this method supports write(Object)
-    public static void jsFunction_write(Context cx, Scriptable thisObj,
-            Object[] args, Function funObj) {
+    public static void jsFunction_write(Context cx, Scriptable thisObj, Object[] args, Function funObj) {
         print(thisObj, args);
     }
 
     // print args to writer if any
     // this method supports print(Object)
-    public static void jsFunction_print(Context cx, Scriptable thisObj,
-            Object[] args, Function funObj) {
+    public static void jsFunction_print(Context cx, Scriptable thisObj, Object[] args, Function funObj) {
         print(thisObj, args);
     }
 
@@ -79,8 +78,7 @@ public class ScriptablePrintWriter extends ScriptableObject implements SlingWrap
     // format string followed by format arguments.
     // This method supports printf(Locale, String, Object...) and
     // printf(String, Object...)
-    public static void jsFunction_printf(Context cx, Scriptable thisObj,
-            Object[] args, Function funObj) {
+    public static void jsFunction_printf(Context cx, Scriptable thisObj, Object[] args, Function funObj) {
 
         if (args.length > 0) {
 
@@ -112,8 +110,7 @@ public class ScriptablePrintWriter extends ScriptableObject implements SlingWrap
                 // arguments starting after that are formatting arguments
                 nextIdx++;
                 Object[] formatArgs = new Object[args.length - nextIdx];
-                System.arraycopy(args, nextIdx, formatArgs, 0,
-                    formatArgs.length);
+                System.arraycopy(args, nextIdx, formatArgs, 0, formatArgs.length);
 
                 // now get the writer and call printf
                 PrintWriter writer = ((ScriptablePrintWriter) thisObj).writer;
@@ -124,8 +121,7 @@ public class ScriptablePrintWriter extends ScriptableObject implements SlingWrap
 
     // print args to the writer (if any) and append a line feed
     // this method supports println(Object)
-    public static void jsFunction_println(Context cx, Scriptable thisObj,
-            Object[] args, Function funObj) {
+    public static void jsFunction_println(Context cx, Scriptable thisObj, Object[] args, Function funObj) {
         print(thisObj, args).println();
     }
 
@@ -153,11 +149,10 @@ public class ScriptablePrintWriter extends ScriptableObject implements SlingWrap
     //    - Otherwise or if getLocale returns null, we use the platform default
     private Locale getLocale() {
         if (locale == null) {
-            
+
             try {
                 // check whether we have a request object which has the locale
-                Object reqObj = ScriptRuntime.name(Context.getCurrentContext(),
-                    this, SlingBindings.REQUEST);
+                Object reqObj = ScriptRuntime.name(Context.getCurrentContext(), this, SlingBindings.REQUEST);
                 if (reqObj instanceof Wrapper) {
                     Object wrapped = ((Wrapper) reqObj).unwrap();
                     if (wrapped instanceof HttpServletRequest) {
@@ -172,7 +167,6 @@ public class ScriptablePrintWriter extends ScriptableObject implements SlingWrap
             if (locale == null) {
                 locale = Locale.getDefault();
             }
-
         }
 
         return locale;

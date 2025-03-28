@@ -19,25 +19,26 @@
 package org.apache.sling.scripting.javascript.internal;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TestPathRegexp {
 
-	@Test
-	void testParentPath() {
-		String regexp = "([^/]*/)?[^/]*/\\.\\./";
-		assertEquals("math", "/../math".replaceAll(regexp, ""));
-		assertEquals("math", "increment/../math".replaceAll(regexp, ""));
-		assertEquals("math", "foo/increment/../math".replaceAll(regexp, ""));
-		assertEquals("foo/math", "foo/bar/increment/../math".replaceAll(regexp, ""));
-	}
+    @Test
+    void testParentPath() {
+        String regexp = "([^/]*/)?[^/]*/\\.\\./";
+        assertEquals("math", "/../math".replaceAll(regexp, ""));
+        assertEquals("math", "increment/../math".replaceAll(regexp, ""));
+        assertEquals("math", "foo/increment/../math".replaceAll(regexp, ""));
+        assertEquals("foo/math", "foo/bar/increment/../math".replaceAll(regexp, ""));
+    }
 
-	@Test
-	void testCurrentPath() {
-		String regexp = "[^/]*/\\./";
-		assertEquals("math", "/./math".replaceAll(regexp, ""));
-		assertEquals("math", "increment/./math".replaceAll(regexp, ""));
-		assertEquals("foo/math", "foo/increment/./math".replaceAll(regexp, ""));
-		assertEquals("foo/bar/math", "foo/bar/increment/./math".replaceAll(regexp, ""));
-	}
+    @Test
+    void testCurrentPath() {
+        String regexp = "[^/]*/\\./";
+        assertEquals("math", "/./math".replaceAll(regexp, ""));
+        assertEquals("math", "increment/./math".replaceAll(regexp, ""));
+        assertEquals("foo/math", "foo/increment/./math".replaceAll(regexp, ""));
+        assertEquals("foo/bar/math", "foo/bar/increment/./math".replaceAll(regexp, ""));
+    }
 }

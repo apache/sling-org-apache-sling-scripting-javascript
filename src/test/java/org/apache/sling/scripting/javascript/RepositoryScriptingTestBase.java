@@ -27,13 +27,12 @@ import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-
 /** Base class for tests which need a Repository
  *  and scripting functionality */
 public class RepositoryScriptingTestBase extends RepositoryTestBase {
     protected ScriptEngineHelper script;
     private int counter;
-    
+
     @Override
     @BeforeEach
     protected void setUp() throws Exception {
@@ -50,5 +49,4 @@ public class RepositoryScriptingTestBase extends RepositoryTestBase {
     protected Node getNewNode() throws RepositoryException, NamingException {
         return getTestRootNode().addNode("test-" + (++counter));
     }
-
 }

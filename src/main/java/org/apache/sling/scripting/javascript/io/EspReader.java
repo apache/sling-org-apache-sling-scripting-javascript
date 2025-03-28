@@ -90,7 +90,7 @@ public class EspReader extends FilterReader {
     private static final byte PARSE_STATE_ECMA_EXPR = 3;
 
     /**
-     * Compact ESP expression syntax similar to JSP Expression Language notation 
+     * Compact ESP expression syntax similar to JSP Expression Language notation
      */
     private static final byte PARSE_STATE_ECMA_EXPR_COMPACT = 4;
 
@@ -127,7 +127,7 @@ public class EspReader extends FilterReader {
      * comment is read (and completely returned).
      */
     private static final byte PARSE_STATE_ECMA_COMMENTL = 9;
-    
+
     /**
      * To work with lookahead and character insertion, we use a PushbackReader.
      */
@@ -183,13 +183,14 @@ public class EspReader extends FilterReader {
      * @see #startWrite(String)
      */
     private boolean outUndefined = true;
-    
+
     /**
      * Javascript statement that sets the "out" variable that's used
      * to output data. Automatically inserted by the reader in code,
      * where needed.
      */
-    public static final String DEFAULT_OUT_INIT_STATEMENT = "out=response.writer;"; 
+    public static final String DEFAULT_OUT_INIT_STATEMENT = "out=response.writer;";
+
     private String outInitStatement = DEFAULT_OUT_INIT_STATEMENT;
 
     /**
@@ -212,7 +213,7 @@ public class EspReader extends FilterReader {
         // Start in ESP (template text) state
         pushState(PARSE_STATE_ESP);
     }
-    
+
     /**
      * Set the code fragment used to initialize the "out" variable
      *
@@ -290,8 +291,7 @@ public class EspReader extends FilterReader {
         ensureOpen();
 
         // Check lines (taken from InputStreamReader ;-)
-        if ((off < 0) || (off > cbuf.length) || (len < 0)
-            || ((off + len) > cbuf.length) || ((off + len) < 0)) {
+        if ((off < 0) || (off > cbuf.length) || (len < 0) || ((off + len) > cbuf.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         } else if (len == 0) {
             return 0;
@@ -398,7 +398,7 @@ public class EspReader extends FilterReader {
     private int doRead() throws IOException {
 
         // we return out of the loop, if we find a character passing the filter
-        for (;;) {
+        for (; ; ) {
 
             // Get a character from the input, which may well have been
             // injected using the unread() method
@@ -421,15 +421,15 @@ public class EspReader extends FilterReader {
             // Do the finite state machine
             switch (state) {
 
-                // NOTE :
-                // - continue means ignore current character, read next
-                // - break means return current character
+                    // NOTE :
+                    // - continue means ignore current character, read next
+                    // - break means return current character
 
-                // Template text state - text is wrapped in out.write()
+                    // Template text state - text is wrapped in out.write()
                 case PARSE_STATE_ESP:
                     if (c == '$') { // might start EL-like ECMA expr
-                    	int c2 = input.read();
-                    	if (c2 == '{') {
+                        int c2 = input.read();
+                        if (c2 == '{') {
                             // ECMA expression ${ ... }
                             pushState(PARSE_STATE_ECMA_EXPR_COMPACT);
                             startWrite(null);
@@ -437,11 +437,11 @@ public class EspReader extends FilterReader {
                                 doVerbatim("\");");
                             }
                             continue;
-                    	}
-                    	 
-                    	input.unread(c2);
+                        }
 
-                    } else  if (c == '<') { // might start ECMA code/expr, ESP comment or JSP comment
+                        input.unread(c2);
+
+                    } else if (c == '<') { // might start ECMA code/expr, ESP comment or JSP comment
                         int c2 = input.read();
                         int c3 = input.read();
 
@@ -467,7 +467,6 @@ public class EspReader extends FilterReader {
                                     continue;
                                 }
                                 input.unread(c4);
-
                             }
 
                             // We only get here if we are sure about ECMA
@@ -479,7 +478,6 @@ public class EspReader extends FilterReader {
                                 doVerbatim("\");");
                             }
                             continue;
-
                         }
 
                         // Nothing special, push back read ahead
@@ -525,7 +523,6 @@ public class EspReader extends FilterReader {
 
                         doVerbatim(String.valueOf((char) c));
                         c = '\\';
-
                     }
 
                     // If in template text at the beginning of a line
@@ -537,10 +534,9 @@ public class EspReader extends FilterReader {
 
                     break;
 
-                // Reading ECMA code or and ECMA expression
+                    // Reading ECMA code or and ECMA expression
                 case PARSE_STATE_ECMA_EXPR:
                 case PARSE_STATE_ECMA:
-
                     if (c == '%') {
 
                         // might return to PARSE_STATE_ESP
@@ -556,7 +552,6 @@ public class EspReader extends FilterReader {
                             lineStart = true;
 
                             continue;
-
                         }
 
                         // false alert, push back
@@ -583,13 +578,12 @@ public class EspReader extends FilterReader {
                         escape = false; // start unescaped
                         quoteChar = (char) c; // to recognize the end
                         pushState(PARSE_STATE_QUOTE);
-
                     }
                     break;
 
-                // reading compact (EL-like) ECMA Expression
+                    // reading compact (EL-like) ECMA Expression
                 case PARSE_STATE_ECMA_EXPR_COMPACT:
-                    if (c == '}') { //might be the end of a compact expression
+                    if (c == '}') { // might be the end of a compact expression
                         // An expression is wrapped in out.write()
                         popState();
                         doVerbatim(");");
@@ -598,11 +592,10 @@ public class EspReader extends FilterReader {
                         lineStart = true;
 
                         continue;
-
                     }
                     break;
 
-                // Reading a JSP comment, only returning line endings
+                    // Reading a JSP comment, only returning line endings
                 case PARSE_STATE_JSP_COMMENT:
 
                     // JSP comments end complexly with --%>
@@ -617,7 +610,6 @@ public class EspReader extends FilterReader {
                                     // we really reached the end ...
                                     popState();
                                     continue;
-
                                 }
                                 input.unread(c4);
                             }
@@ -656,7 +648,7 @@ public class EspReader extends FilterReader {
 
                     break;
 
-                // Return characters unfiltered
+                    // Return characters unfiltered
                 case PARSE_STATE_VERBATIM:
 
                     // Go back to previous state if all characters read
@@ -666,7 +658,7 @@ public class EspReader extends FilterReader {
 
                     break;
 
-                // Return an ECMA multiline comment, ending with */
+                    // Return an ECMA multiline comment, ending with */
                 case PARSE_STATE_ECMA_COMMENT:
 
                     // Might be the end of the comment
@@ -682,7 +674,7 @@ public class EspReader extends FilterReader {
 
                     break;
 
-                // Return an ECMA single line comment, ending with end of line
+                    // Return an ECMA single line comment, ending with end of line
                 case PARSE_STATE_ECMA_COMMENTL:
 
                     // CRLF recognition
@@ -699,8 +691,8 @@ public class EspReader extends FilterReader {
                     }
 
                     break;
-                    
-                // What ???!!!
+
+                    // What ???!!!
                 default:
 
                     // we warn and go back to default state
@@ -708,14 +700,11 @@ public class EspReader extends FilterReader {
                     state = PARSE_STATE_ESP;
 
                     break;
-
             } // switch
 
             // Exiting the switch normally we return the current character
             return c;
-
         } // for(;;)
-
     }
 
     /**
@@ -804,5 +793,4 @@ public class EspReader extends FilterReader {
         state = stateStack.isEmpty() ? PARSE_STATE_ESP : stateStack.pop();
         return oldState;
     }
-
 }

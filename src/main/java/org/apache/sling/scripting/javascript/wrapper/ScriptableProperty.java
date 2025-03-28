@@ -33,7 +33,7 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
 
     public static final String CLASSNAME = "Property";
 
-    private static final Class<?>[] WRAPPED_CLASSES = { Property.class };
+    private static final Class<?>[] WRAPPED_CLASSES = {Property.class};
 
     /**
      * The wrapped JCR Property instance. Will be {@code null} if the
@@ -42,8 +42,7 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
      */
     private Property property;
 
-    public ScriptableProperty() {
-    }
+    public ScriptableProperty() {}
 
     public void jsConstructor(Object res) {
         this.property = (Property) res;
@@ -263,11 +262,11 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
     @Override
     public Object get(String name, Scriptable start) {
         final Object fromSuperclass = super.get(name, start);
-        if(fromSuperclass != Scriptable.NOT_FOUND) {
+        if (fromSuperclass != Scriptable.NOT_FOUND) {
             return fromSuperclass;
         }
 
-        if(property == null) {
+        if (property == null) {
             return Undefined.instance;
         }
 

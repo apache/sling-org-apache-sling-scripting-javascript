@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
@@ -55,20 +57,18 @@ import org.slf4j.LoggerFactory;
  * <li>[Object] properties</li>
  * </ul>
  */
-public class ScriptableResource extends ScriptableObject implements
-        SlingWrapper {
+public class ScriptableResource extends ScriptableObject implements SlingWrapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScriptableResource.class);
 
     public static final String CLASSNAME = "Resource";
 
-    private static final Class<?>[] WRAPPED_CLASSES = { Resource.class };
+    private static final Class<?>[] WRAPPED_CLASSES = {Resource.class};
 
     private Resource resource;
     private ValueMap properties;
 
-    public ScriptableResource() {
-    }
+    public ScriptableResource() {}
 
     public ScriptableResource(Resource resource) {
         this.resource = resource;
@@ -271,8 +271,7 @@ public class ScriptableResource extends ScriptableObject implements
      *         the resource does not adapt to the required type or if the
      *         argument is of the wrong type or missing.
      */
-    public static Object jsFunction_adaptTo(Context cx, Scriptable thisObj,
-            Object[] args, Function funObj) {
+    public static Object jsFunction_adaptTo(Context cx, Scriptable thisObj, Object[] args, Function funObj) {
 
         // get and unwrap the argument
         Object arg = (args.length > 0) ? args[0] : null;
@@ -299,7 +298,6 @@ public class ScriptableResource extends ScriptableObject implements
             } catch (Exception e) {
                 LOGGER.error("Unable to adapt object.", e);
             }
-
         }
 
         if (adapter != null) {

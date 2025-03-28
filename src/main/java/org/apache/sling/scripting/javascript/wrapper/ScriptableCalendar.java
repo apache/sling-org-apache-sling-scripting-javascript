@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
@@ -29,8 +31,8 @@ import org.mozilla.javascript.Undefined;
 @SuppressWarnings("serial")
 public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
 
-	public static final String CLASSNAME = "Calendar";
-	private SimpleDateFormat calendarFormat;
+    public static final String CLASSNAME = "Calendar";
+    private SimpleDateFormat calendarFormat;
 
     /** Used to format date values */
     static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
@@ -38,19 +40,19 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
     /** The Locale used to format date values */
     static final Locale DATE_FORMAT_LOCALE = Locale.US;
 
-	/** Calendar is a class, not an interface - so we need to enumerate possible implementations here */
-    private static final Class<?> [] WRAPPED_CLASSES = { Calendar.class, GregorianCalendar.class };
+    /** Calendar is a class, not an interface - so we need to enumerate possible implementations here */
+    private static final Class<?>[] WRAPPED_CLASSES = {Calendar.class, GregorianCalendar.class};
 
     /**
      * The wrapped Calendar. Will be {@code null} if the
      * {@link #jsConstructor(Object)} method is not called, which particularly
      * is the case for the Calendar host object prototype.
      */
-	private Calendar calendar;
+    private Calendar calendar;
 
     public Class<?>[] getWrappedClasses() {
-		return WRAPPED_CLASSES;
-	}
+        return WRAPPED_CLASSES;
+    }
 
     public void jsConstructor(Object o) {
         this.calendar = (Calendar) o;
@@ -61,51 +63,51 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
 
         // builtin javascript properties (jsFunction_ etc.) have priority
         final Object fromSuperclass = super.get(name, start);
-        if(fromSuperclass != Scriptable.NOT_FOUND) {
+        if (fromSuperclass != Scriptable.NOT_FOUND) {
             return fromSuperclass;
         }
 
-        if(calendar == null) {
+        if (calendar == null) {
             return Undefined.instance;
         }
 
-        if("date".equals(name)) {
-        	return ScriptRuntime.toObject(this, calendar.getTime());
+        if ("date".equals(name)) {
+            return ScriptRuntime.toObject(this, calendar.getTime());
         }
 
         return getNative(name, start);
     }
 
-	@Override
-	protected Class<?> getStaticType() {
-		return Calendar.class;
-	}
+    @Override
+    protected Class<?> getStaticType() {
+        return Calendar.class;
+    }
 
-	@Override
-	protected Object getWrappedObject() {
-		return calendar;
-	}
+    @Override
+    protected Object getWrappedObject() {
+        return calendar;
+    }
 
-	@Override
-	public String getClassName() {
-		return CLASSNAME;
-	}
+    @Override
+    public String getClassName() {
+        return CLASSNAME;
+    }
 
-	@Override
-	public String toString() {
+    @Override
+    public String toString() {
         if (calendarFormat == null) {
             calendarFormat = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
         }
         return calendarFormat.format(calendar.getTime());
-	}
+    }
 
     public Object unwrap() {
         return calendar;
     }
 
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public Object getDefaultValue(Class typeHint) {
-    	return toString();
+        return toString();
     }
 }
