@@ -18,7 +18,7 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
-import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
@@ -45,47 +45,41 @@ public class SlingContextFactory extends ContextFactory {
 
     private int languageVersion;
 
-    // conditionally setup the global ContextFactory to be ours. If
-    // a global context factory has already been set, we have lost
-    // and cannot set this one.
-    public static void setup(ScopeProvider sp, int languageVersion) {
-        // TODO what do we do in the other case? debugger won't work
-        if (!hasExplicitGlobal()) {
-            initGlobal(new SlingContextFactory(
-                    sp, Context.isValidLanguageVersion(languageVersion) ? languageVersion : Context.VERSION_DEFAULT));
+    private static final AtomicReference<SlingContextFactory> singleSlingContextFactoryRef = new AtomicReference<>();
+
+    /**
+     * @param sp the scope provider
+     * @param languageVersion the language version.
+     * @return the SlingContextFactory instance that has been successfully registered as the custom global context factory of the Rhino Runtime.
+     */
+    public static SlingContextFactory getInstance(ScopeProvider sp, int languageVersion) throws RuntimeException {
+        if (singleSlingContextFactoryRef.get() == null) {
+            synchronized (SlingContextFactory.class) {
+                if (singleSlingContextFactoryRef.get() == null) {
+                    try {
+                        SlingContextFactory factory = new SlingContextFactory(sp, languageVersion);
+                        ContextFactory.initGlobal(factory);
+                        singleSlingContextFactoryRef.set(factory);
+                    } catch (IllegalArgumentException e) {
+                        throw new RuntimeException("Fail to set Sling Context Factory as custom context factory", e);
+                    } catch (IllegalStateException e) {
+                        throw new RuntimeException("Custom context factory already initiated.", e);
+                    }
+                }
+            }
         }
+        return singleSlingContextFactoryRef.get();
     }
 
-    public static void teardown() {
-        ContextFactory factory = getGlobal();
-        if (factory instanceof SlingContextFactory) {
-            ((SlingContextFactory) factory).dispose();
-        }
-    }
-
-    // private as instances of this class are only used by setup()
     private SlingContextFactory(ScopeProvider sp, int languageVersion) {
         scopeProvider = sp;
-        this.languageVersion = languageVersion;
-    }
-
-    private void dispose() {
-        // ensure the debugger is closed
-        exitDebugger();
-
-        // reset the context factory class for future use
-        ContextFactory newGlobal = new ContextFactory();
-        setField(newGlobal, "hasCustomGlobal", Boolean.FALSE);
-        setField(newGlobal, "global", newGlobal);
-        setField(newGlobal, "sealed", Boolean.FALSE);
-        setField(newGlobal, "listeners", null);
-        setField(newGlobal, "disabledListening", Boolean.FALSE);
-        setField(newGlobal, "applicationClassLoader", null);
+        this.languageVersion =
+                Context.isValidLanguageVersion(languageVersion) ? languageVersion : Context.VERSION_DEFAULT;
     }
 
     @Override
     protected Context makeContext() {
-        Context context = new SlingContext();
+        Context context = new SlingContext(this);
         context.setLanguageVersion(languageVersion);
         return context;
     }
@@ -138,21 +132,5 @@ public class SlingContextFactory extends ContextFactory {
 
     public boolean isDebugging() {
         return debuggerActive;
-    }
-
-    private void setField(Object instance, String fieldName, Object value) {
-        try {
-            Field field = instance.getClass().getDeclaredField(fieldName);
-            if (!field.isAccessible()) {
-                field.setAccessible(true);
-            }
-            field.set(instance, value);
-        } catch (IllegalArgumentException iae) {
-            // don't care, but it is strange anyhow
-        } catch (IllegalAccessException iae) {
-            // don't care, but it is strange anyhow
-        } catch (NoSuchFieldException nsfe) {
-            // don't care, but it is strange anyhow
-        }
     }
 }

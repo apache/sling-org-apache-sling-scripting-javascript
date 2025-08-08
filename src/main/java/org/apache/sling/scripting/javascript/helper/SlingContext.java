@@ -19,6 +19,7 @@
 package org.apache.sling.scripting.javascript.helper;
 
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -28,6 +29,10 @@ import org.mozilla.javascript.ScriptableObject;
  * standard objects.
  */
 public class SlingContext extends Context {
+
+    protected SlingContext(ContextFactory factory) {
+        super(factory);
+    }
 
     @Override
     public ScriptableObject initStandardObjects(ScriptableObject scope, boolean sealed) {

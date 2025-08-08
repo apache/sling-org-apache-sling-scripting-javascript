@@ -24,10 +24,12 @@ import java.util.Arrays;
 
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.ScriptCache;
+import org.apache.sling.scripting.javascript.helper.SlingContextFactory;
 import org.apache.sling.testing.mock.osgi.junit5.OsgiContext;
 import org.apache.sling.testing.mock.osgi.junit5.OsgiContextExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mozilla.javascript.ContextFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,5 +59,25 @@ class RhinoJavaScriptEngineFactoryTest {
         assertTrue(
                 instance.getEngineName() != null && instance.getEngineName().contains("Rhino 1.7.7.1_1"),
                 "Unexpected engine name");
+    }
+
+    @Test
+    void testGlobalSlingContextFactory() {
+        DynamicClassLoaderManager dynamicClassLoaderManager = mock(DynamicClassLoaderManager.class);
+        when(dynamicClassLoaderManager.getDynamicClassLoader())
+                .thenReturn(RhinoJavaScriptEngineFactoryTest.class.getClassLoader());
+        context.registerService(DynamicClassLoaderManager.class, dynamicClassLoaderManager);
+        context.registerService(ScriptCache.class, mock(ScriptCache.class));
+        context.registerInjectActivateService(new RhinoJavaScriptEngineFactory());
+        RhinoJavaScriptEngineFactory instance =
+                (RhinoJavaScriptEngineFactory) context.getService(ScriptEngineFactory.class);
+        assertTrue(
+                (ContextFactory.getGlobal() instanceof SlingContextFactory),
+                "SlingContextFactory type should be the global context factory but is not");
+        assertTrue(
+                ContextFactory.getGlobal()
+                        == (ContextFactory) (SlingContextFactory.getInstance(
+                                instance, RhinoJavaScriptEngineFactory.RHINO_LANGUAGE_VERSION)),
+                "SlingContextFactory instance should always equal to the registered =global context factory but is not");
     }
 }

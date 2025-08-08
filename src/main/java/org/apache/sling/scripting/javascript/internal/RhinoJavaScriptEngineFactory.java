@@ -51,7 +51,6 @@ import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableVersion;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableVersionHistory;
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.NativeJavaClass;
 import org.mozilla.javascript.NativeJavaPackage;
@@ -125,7 +124,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
 
     private int optimizationLevel;
 
-    private static final int RHINO_LANGUAGE_VERSION = Context.VERSION_ES6;
+    public static final int RHINO_LANGUAGE_VERSION = Context.VERSION_ES6;
     private static final String LANGUAGE_VERSION = "partial ECMAScript 2015 support";
     private static final String LANGUAGE_NAME = "ECMAScript";
 
@@ -134,6 +133,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
     private Scriptable rootScope;
 
     private final Set<RhinoHostObjectProvider> hostObjectProvider = new HashSet<RhinoHostObjectProvider>();
+
+    private SlingContextFactory contextFactory;
 
     @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager = null;
@@ -252,10 +253,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
         // ensure the debugger is closed if the root scope will
         // be replaced to ensure no references to the old scope
         // and context remain
-        ContextFactory contextFactory = ContextFactory.getGlobal();
-        if (contextFactory instanceof SlingContextFactory) {
-            ((SlingContextFactory) contextFactory).exitDebugger();
-        }
+        contextFactory.exitDebugger();
 
         // drop the scope
         rootScope = null;
@@ -308,7 +306,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             wrapFactory = new SlingWrapFactory();
 
             // initialize the Rhino Context Factory
-            SlingContextFactory.setup(this, RHINO_LANGUAGE_VERSION);
+            contextFactory = SlingContextFactory.getInstance(this, RHINO_LANGUAGE_VERSION);
+            contextFactory.setDebugging(debugging);
 
             setEngineName(getEngineName() + " (Rhino " + (rhinoVersion != null ? rhinoVersion : "unknown") + ")");
 
@@ -316,18 +315,26 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             setMimeTypes(PropertiesUtil.toStringArray(props.get("mimeTypes")));
             setNames(PropertiesUtil.toStringArray(props.get("names")));
 
-            final ContextFactory contextFactory = ContextFactory.getGlobal();
-            if (contextFactory instanceof SlingContextFactory) {
-                ((SlingContextFactory) contextFactory).setDebugging(debugging);
-            }
             // set the dynamic class loader as the application class loader
             final DynamicClassLoaderManager dclm = this.dynamicClassLoaderManager;
             if (dclm != null) {
-                contextFactory.initApplicationClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
+                if (contextFactory.getApplicationClassLoader() == null) {
+                    contextFactory.initApplicationClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
+                } else {
+                    log.warn("Ignoring multiple dynamic class loader registration attempts.");
+                }
             }
 
             log.info("Activated with optimization level {}", optimizationLevel);
             active = true;
+        } catch (RuntimeException e) {
+            /**
+             * Fail the bundle initialization if SlingContextFactory was not registered as the custom context
+             * provide to prevent incorrect scripting processing results.
+             */
+            log.error(
+                    "Cannot register SlingContexrtFactory as custom global context provider.  This could happen if there is another Rhino JavaScript service conflict.");
+            throw e;
         } finally {
             writeLock.unlock();
         }
@@ -341,10 +348,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             // remove the root scope
             dropRootScope();
 
-            // remove our context factory
-            SlingContextFactory.teardown();
-
             // remove references
+            contextFactory = null;
             wrapFactory = null;
             hostObjectProvider.clear();
 
