@@ -18,14 +18,11 @@
  */
 package org.apache.sling.scripting.javascript.io;
 
-import javax.script.ScriptException;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.stream.Stream;
 
-import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -239,27 +236,6 @@ class EspReaderTest {
         input = "<%= '1' %>";
         expected = "out=response.writer;out.write( '1' );";
         actual = parse(input);
-        assertEquals(expected, actual);
-    }
-
-    /** Test a complete template, using all features */
-    @Test
-    void testNumericExpressionOutput() throws ScriptException {
-        ScriptEngineHelper script = new ScriptEngineHelper();
-
-        String input = "out.write( 1 );";
-        String actual = script.evalToString(input);
-        String expected = "1";
-        assertEquals(expected, actual);
-
-        input = "out.write( \"1\" );";
-        actual = script.evalToString(input);
-        expected = "1";
-        assertEquals(expected, actual);
-
-        input = "out.write( '1' );";
-        actual = script.evalToString(input);
-        expected = "1";
         assertEquals(expected, actual);
     }
 

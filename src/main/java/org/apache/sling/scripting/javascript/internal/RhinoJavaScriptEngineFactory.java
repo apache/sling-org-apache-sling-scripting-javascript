@@ -67,6 +67,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,8 +136,13 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
 
     private final Set<RhinoHostObjectProvider> hostObjectProvider = new HashSet<RhinoHostObjectProvider>();
 
-    @Reference
-    private DynamicClassLoaderManager dynamicClassLoaderManager = null;
+    @Reference(
+            policy = ReferencePolicy.DYNAMIC,
+            policyOption = ReferencePolicyOption.GREEDY,
+            bind = "bindDynamicClassLoaderManager",
+            unbind = "unbindDynamicClassLoaderManager")
+    @SuppressWarnings("java:S3077")
+    private volatile DynamicClassLoaderManager dynamicClassLoaderManager = null;
 
     @Reference
     private ScriptCache scriptCache = null;
@@ -320,10 +326,15 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             if (contextFactory instanceof SlingContextFactory) {
                 ((SlingContextFactory) contextFactory).setDebugging(debugging);
             }
-            // set the dynamic class loader as the application class loader
-            final DynamicClassLoaderManager dclm = this.dynamicClassLoaderManager;
-            if (dclm != null) {
-                contextFactory.initApplicationClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
+            // Set a stable wrapper as Rhino's application class loader.
+            // SlingContextFactory.dispose() resets applicationClassLoader to null on every
+            // deactivate(), so initApplicationClassLoader() can be called cleanly on each
+            // activation with a fresh IndirectClassLoader tied to this factory instance.
+            // The IndirectClassLoader delegates to this.dynamicClassLoaderManager at call
+            // time, so the underlying ClassLoaderFacade can be swapped on bundle restarts
+            // (via bindDynamicClassLoaderManager) without violating the called-once contract.
+            if (contextFactory instanceof SlingContextFactory) {
+                contextFactory.initApplicationClassLoader(new IndirectClassLoader());
             }
 
             log.info("Activated with optimization level {}", optimizationLevel);
@@ -351,6 +362,68 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
             active = false;
         } finally {
             writeLock.unlock();
+        }
+    }
+
+    @SuppressWarnings("unused")
+    protected void bindDynamicClassLoaderManager(DynamicClassLoaderManager dclm) {
+        this.dynamicClassLoaderManager = dclm;
+        // Drop the rootScope so Rhino rebuilds it with a fresh NativeJavaPackage / NativeJavaClass tree.
+        writeLock.lock();
+        try {
+            dropRootScope();
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    @SuppressWarnings("unused")
+    protected void unbindDynamicClassLoaderManager(DynamicClassLoaderManager dclm) {
+        if (this.dynamicClassLoaderManager == dclm) {
+            this.dynamicClassLoaderManager = null;
+        }
+    }
+
+    /**
+     * A class loader that always delegates to the current {@link DynamicClassLoaderManager}.
+     *
+     * <p>Rhino's {@code ContextFactory.initApplicationClassLoader()} can only be called once
+     * per lifetime of the global {@code ContextFactory} instance. {@link SlingContextFactory#dispose()}
+     * resets {@code applicationClassLoader} to {@code null} on every {@link #deactivate}, so
+     * a fresh {@code IndirectClassLoader} is registered on each activation. By delegating to
+     * {@code this.dynamicClassLoaderManager} at call time rather than capturing a fixed
+     * {@code ClassLoaderFacade}, it remains correct across {@link #bindDynamicClassLoaderManager}
+     * rebinds (i.e. every OSGi bundle restart) without needing to re-register with Rhino.
+     * <p>
+     * The bundle classloader is used as the parent so that Rhino's own classes (loaded by
+     * {@code org.mozilla.javascript.*} imports in this bundle) can be resolved. Rhino validates
+     * the registered loader via {@code Kit.testIfCanLoadRhinoClasses(loader)} and rejects loaders
+     * that cannot resolve its own classes. Application classes are resolved first via the
+     * {@code DynamicClassLoaderManager}; the parent bundle classloader acts as fallback for
+     * framework and Rhino classes.
+     */
+    private class IndirectClassLoader extends ClassLoader {
+
+        IndirectClassLoader() {
+            // Use the bundle classloader as parent so Rhino's Kit.testIfCanLoadRhinoClasses()
+            // validation passes (it checks that org.mozilla.javascript.* are resolvable).
+            super(RhinoJavaScriptEngineFactory.class.getClassLoader());
+        }
+
+        @Override
+        public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            // Application classes (e.g. Sling API, user bundles) come from the dynamic
+            // classloader. Fall back to the parent (bundle CL) for Rhino and OSGi framework
+            // classes that are not exported into the dynamic classloader's scope.
+            final DynamicClassLoaderManager dclm = dynamicClassLoaderManager;
+            if (dclm != null) {
+                try {
+                    return dclm.getDynamicClassLoader().loadClass(name);
+                } catch (ClassNotFoundException ignored) {
+                    // fall through to bundle classloader
+                }
+            }
+            return super.loadClass(name, resolve);
         }
     }
 

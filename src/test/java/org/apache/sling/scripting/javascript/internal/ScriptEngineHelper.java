@@ -31,48 +31,20 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.commons.testing.osgi.MockBundle;
-import org.apache.sling.commons.testing.osgi.MockComponentContext;
-import org.apache.sling.scripting.api.ScriptCache;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Wrapper;
-import org.osgi.framework.BundleContext;
-
-import static org.mockito.Mockito.mock;
 
 /** Helpers to run javascript code fragments in tests */
 public class ScriptEngineHelper {
 
-    private static ScriptEngine engine;
+    private final ScriptEngine engine;
 
-    @Mock
-    private static ScriptCache scriptCache;
-
-    @Mock
-    private RhinoJavaScriptEngineFactoryConfiguration factoryConfiguration;
-
-    @InjectMocks
-    private RhinoJavaScriptEngineFactory factory;
-
-    public ScriptEngineHelper() {
-        MockitoAnnotations.openMocks(this);
+    public ScriptEngineHelper(ScriptEngine engine) {
+        this.engine = engine;
     }
 
     public static class Data extends HashMap<String, Object> {}
-
-    private ScriptEngine getEngine() {
-        if (engine == null) {
-            synchronized (ScriptEngineHelper.class) {
-                factory.activate(new RhinoMockComponentContext(), factoryConfiguration);
-                engine = factory.getScriptEngine();
-            }
-        }
-        return engine;
-    }
 
     public String evalToString(String javascriptCode) throws ScriptException {
         return evalToString(javascriptCode, null);
@@ -103,7 +75,7 @@ public class ScriptEngineHelper {
         ctx.setBindings(b, ScriptContext.ENGINE_SCOPE);
         ctx.setWriter(sw);
         ctx.setErrorWriter(new OutputStreamWriter(System.err));
-        Object result = getEngine().eval(javascriptCode, ctx);
+        Object result = engine.eval(javascriptCode, ctx);
 
         if (result instanceof Wrapper) {
             result = ((Wrapper) result).unwrap();
@@ -119,19 +91,5 @@ public class ScriptEngineHelper {
         }
 
         return result;
-    }
-
-    private static class RhinoMockComponentContext extends MockComponentContext {
-
-        private BundleContext bundleContext = mock(BundleContext.class);
-
-        private RhinoMockComponentContext() {
-            super(new MockBundle(0));
-        }
-
-        @Override
-        public BundleContext getBundleContext() {
-            return bundleContext;
-        }
     }
 }
