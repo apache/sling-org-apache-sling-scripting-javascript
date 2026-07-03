@@ -22,14 +22,25 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.naming.NamingException;
 
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.scripting.api.ScriptCache;
+import org.apache.sling.scripting.javascript.internal.RhinoJavaScriptEngineFactory;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
+import org.apache.sling.testing.mock.osgi.junit5.OsgiContext;
+import org.apache.sling.testing.mock.osgi.junit5.OsgiContextExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-/** Base class for tests which need a Repository
- *  and scripting functionality */
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/** Base class for tests which need a Repository and scripting functionality */
+@ExtendWith(OsgiContextExtension.class)
 public class RepositoryScriptingTestBase extends RepositoryTestBase {
+
+    private final OsgiContext osgiContext = new OsgiContext();
     protected ScriptEngineHelper script;
     private int counter;
 
@@ -37,7 +48,13 @@ public class RepositoryScriptingTestBase extends RepositoryTestBase {
     @BeforeEach
     protected void setUp() throws Exception {
         super.setUp();
-        script = new ScriptEngineHelper();
+        DynamicClassLoaderManager dclm = mock(DynamicClassLoaderManager.class);
+        when(dclm.getDynamicClassLoader()).thenReturn(getClass().getClassLoader());
+        osgiContext.registerService(DynamicClassLoaderManager.class, dclm);
+        osgiContext.registerService(ScriptCache.class, mock(ScriptCache.class));
+        RhinoJavaScriptEngineFactory factory = new RhinoJavaScriptEngineFactory();
+        osgiContext.registerInjectActivateService(factory);
+        script = new ScriptEngineHelper(factory.getScriptEngine());
     }
 
     @Override
