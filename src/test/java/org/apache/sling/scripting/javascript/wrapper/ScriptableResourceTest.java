@@ -47,25 +47,21 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.scripting.javascript.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
-import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.junit5.SlingContext;
-import org.apache.sling.testing.mock.sling.junit5.SlingContextExtension;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ExtendWith(SlingContextExtension.class)
-class ScriptableResourceTest extends RepositoryScriptingTestBase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
-    private static final SlingContext context = new SlingContext(ResourceResolverType.RESOURCERESOLVER_MOCK);
+class ScriptableResourceTest extends RepositoryScriptingTestBase {
 
     private Node node;
 
-    private static final ResourceResolver RESOURCE_RESOLVER = context.resourceResolver();
+    private ResourceResolver resourceResolver;
 
     private static final String RESOURCE_TYPE = "testWrappedResourceType";
 
@@ -78,6 +74,7 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
     protected void setUp() throws Exception {
         super.setUp();
 
+        resourceResolver = context.resourceResolver();
         node = getNewNode();
 
         try {
@@ -213,8 +210,8 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         data.put("resource", new TestResource(node));
 
         // official API
-        assertEquals(RESOURCE_RESOLVER, script.eval("resource.resourceResolver", data));
-        assertEquals(RESOURCE_RESOLVER, script.eval("resource.getResourceResolver()", data));
+        assertEquals(resourceResolver, script.eval("resource.resourceResolver", data));
+        assertEquals(resourceResolver, script.eval("resource.getResourceResolver()", data));
     }
 
     @Test
@@ -223,8 +220,8 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         data.put("resource", new TestResource(node));
 
         // the node to which the resource adapts
-        assertEquals(node, script.eval("resource.adaptTo('javax.jcr.Node')", data));
-        assertEquals(node, script.eval("resource.adaptTo(Packages.javax.jcr.Node)", data));
+        assertNodeEquals(node, script.eval("resource.adaptTo('javax.jcr.Node')", data));
+        assertNodeEquals(node, script.eval("resource.adaptTo(Packages.javax.jcr.Node)", data));
     }
 
     @Test
@@ -253,12 +250,12 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals("testProperties", script.eval("resource.properties.test", data));
     }
 
-    private void assertEquals(Node expected, Object actual) {
+    private void assertNodeEquals(Node expected, Object actual) {
         while (actual instanceof Wrapper) {
             actual = ((Wrapper) actual).unwrap();
         }
 
-        super.assertEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
     private void assertResourceMetaData(Object metaData) throws Exception {
@@ -270,7 +267,7 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         }
     }
 
-    private static class TestResource implements Resource {
+    private class TestResource implements Resource {
 
         private final Node node;
 
@@ -294,7 +291,7 @@ class ScriptableResourceTest extends RepositoryScriptingTestBase {
         }
 
         public ResourceResolver getResourceResolver() {
-            return RESOURCE_RESOLVER;
+            return resourceResolver;
         }
 
         @Override

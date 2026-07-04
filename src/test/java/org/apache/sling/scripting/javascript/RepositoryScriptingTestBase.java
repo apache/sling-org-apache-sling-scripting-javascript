@@ -20,15 +20,18 @@ package org.apache.sling.scripting.javascript;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.naming.NamingException;
+import javax.jcr.Session;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.scripting.api.ScriptCache;
 import org.apache.sling.scripting.javascript.internal.RhinoJavaScriptEngineFactory;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
-import org.apache.sling.testing.mock.osgi.junit5.OsgiContext;
-import org.apache.sling.testing.mock.osgi.junit5.OsgiContextExtension;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit5.SlingContext;
+import org.apache.sling.testing.mock.sling.junit5.SlingContextExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,34 +39,60 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/** Base class for tests which need a Repository and scripting functionality */
-@ExtendWith(OsgiContextExtension.class)
-public class RepositoryScriptingTestBase extends RepositoryTestBase {
+/**
+ * Base class for tests which need a Repository and scripting functionality.
+ */
+@ExtendWith(SlingContextExtension.class)
+public class RepositoryScriptingTestBase {
 
-    private final OsgiContext osgiContext = new OsgiContext();
+    /** Unique suffix for the per-test root node; the Oak repository is shared across the JVM. */
+    private static final AtomicInteger rootCounter = new AtomicInteger();
+
+    protected final SlingContext context = new SlingContext(ResourceResolverType.JCR_OAK);
     protected ScriptEngineHelper script;
+    protected Session session;
+    private RhinoJavaScriptEngineFactory factory;
+    private Node testRootNode;
     private int counter;
 
-    @Override
     @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         DynamicClassLoaderManager dclm = mock(DynamicClassLoaderManager.class);
         when(dclm.getDynamicClassLoader()).thenReturn(getClass().getClassLoader());
-        osgiContext.registerService(DynamicClassLoaderManager.class, dclm);
-        osgiContext.registerService(ScriptCache.class, mock(ScriptCache.class));
-        RhinoJavaScriptEngineFactory factory = new RhinoJavaScriptEngineFactory();
-        osgiContext.registerInjectActivateService(factory);
+        context.registerService(DynamicClassLoaderManager.class, dclm);
+        context.registerService(ScriptCache.class, mock(ScriptCache.class));
+        factory = new RhinoJavaScriptEngineFactory();
+        context.registerInjectActivateService(factory);
         script = new ScriptEngineHelper(factory.getScriptEngine());
+        session = context.resourceResolver().adaptTo(Session.class);
     }
 
-    @Override
     @AfterEach
     protected void tearDown() throws Exception {
-        super.tearDown();
+        // Rhino's global ContextFactory keeps a set-once application class loader; deactivating the
+        // factory disposes it so the next activation in this JVM can set it again cleanly.
+        if (factory != null) {
+            MockOsgi.deactivate(factory, context.bundleContext());
+            factory = null;
+        }
+        if (session != null && session.isLive()) {
+            session.logout();
+        }
     }
 
-    protected Node getNewNode() throws RepositoryException, NamingException {
+    protected Session getSession() {
+        return session;
+    }
+
+    protected Node getTestRootNode() throws RepositoryException {
+        if (testRootNode == null) {
+            testRootNode = session.getRootNode().addNode("test_" + rootCounter.incrementAndGet(), "nt:unstructured");
+            session.save();
+        }
+        return testRootNode;
+    }
+
+    protected Node getNewNode() throws RepositoryException {
         return getTestRootNode().addNode("test-" + (++counter));
     }
 }
