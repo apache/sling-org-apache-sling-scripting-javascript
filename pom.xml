@@ -29,7 +29,7 @@
     </parent>
 
     <artifactId>org.apache.sling.scripting.javascript</artifactId>
-    <version>3.1.5-SNAPSHOT</version>
+    <version>3.1.6</version>
 
     <name>Apache Sling Scripting JavaScript</name>
     <description>Support for JavaScript scripting</description>
@@ -37,7 +37,7 @@
     <scm>
         <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-scripting-javascript.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-scripting-javascript.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>org.apache.sling.scripting.javascript-3.1.6</tag>
         <url>https://github.com/apache/sling-org-apache-sling-scripting-javascript.git</url>
     </scm>
 
