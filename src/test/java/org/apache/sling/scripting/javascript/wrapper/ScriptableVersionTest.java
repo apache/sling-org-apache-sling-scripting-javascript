@@ -25,6 +25,9 @@ import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 /** Test access to Version and VersionHistory objects */
 class ScriptableVersionTest extends RepositoryScriptingTestBase {
 

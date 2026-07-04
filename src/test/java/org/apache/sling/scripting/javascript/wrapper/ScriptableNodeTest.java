@@ -30,6 +30,9 @@ import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /** Test the ScriptableNode class "live", by retrieving
  *  Nodes from a Repository and executing javascript code
  *  using them.
@@ -162,7 +165,7 @@ class ScriptableNodeTest extends RepositoryScriptingTestBase {
         final String result = script.evalToString(code, data);
         final String[] names = {"text", "otherProperty"};
         for (String name : names) {
-            assertTrue("result (" + result + ") contains '" + name + "'", result.contains(name));
+            assertTrue(result.contains(name), "result (" + result + ") contains '" + name + "'");
         }
     }
 
@@ -273,11 +276,11 @@ class ScriptableNodeTest extends RepositoryScriptingTestBase {
     @Test
     void testGetSession() throws Exception {
         assertEquals(
-                "Root node found via node.session", "/", script.eval("node.session.getRootNode().getPath()", data));
+                "/", script.eval("node.session.getRootNode().getPath()", data), "Root node found via node.session");
         assertEquals(
-                "Root node found via node.getSession()",
                 "/",
-                script.eval("node.getSession().getRootNode().getPath()", data));
+                script.eval("node.getSession().getRootNode().getPath()", data),
+                "Root node found via node.getSession()");
     }
 
     /**
